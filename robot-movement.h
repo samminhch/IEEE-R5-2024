@@ -7,27 +7,28 @@
 
 #include <Arduino.h>
 
-// maybe add an encoder count / value to this struct?
+// TODO maybe add an encoder count / value to this struct?
 struct motor {
-        int speed_pin;
-        int direction_pin_1;
-        int direction_pin_2;
+        const int speed_pin;
+        const int direction_pin_1;
+        const int direction_pin_2;
+        const int encoder_pin;
+        int encoder_count;
 };
 
 // define constants
 const double WHEEL_RADIUS = 0.33;  // inches
-const int MOTOR_MIN       = 0;
-const int MOTOR_MAX       = 255;
+const int MOTOR_MAX       = 1023;
+const int MOTOR_MIN       = -MOTOR_MAX;
 
 // Should only be called once in the setup function. Sets up the pinModes and
 // input status for the left and right motors
 void setup_motor(motor);
 
-// TODO
 void move_robot(motor left, motor right, double inches, double degrees);
 
-// speed should be a value from 0-255
-void spin_motor(motor, int speed, bool reversed);
+// speed should be a value from MOTOR_MIN->MOTOR_MAX
+void spin_motor(motor, int speed);
 
 // sets both direction pins of motor to LOW
 void stop_motor(motor);

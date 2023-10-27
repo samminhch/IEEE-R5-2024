@@ -11,14 +11,15 @@ void setup_motor(motor m) {
     digitalWrite(m.direction_pin_2, LOW);
 }
 
-void move_robot(double centimeters, double degrees) {}
+void move_robot(double inches, double degrees) {}
 
 void stop_motor(motor m) {
     digitalWrite(m.direction_pin_1, LOW);
     digitalWrite(m.direction_pin_2, LOW);
 }
 
-void spin_motor(motor m, int speed, bool reversed) {
+void spin_motor(motor m, int speed) {
+    bool reversed = speed < 0;
     if (speed < MOTOR_MIN || speed > MOTOR_MAX) {
         char buffer[64];
         sprintf(buffer, "%d is not in the range of %d->%d. Not executing function.", speed, MOTOR_MIN, MOTOR_MAX);
@@ -26,7 +27,7 @@ void spin_motor(motor m, int speed, bool reversed) {
 
         return;
     }
-    analogWrite(m.speed_pin, speed);
+    analogWrite(m.speed_pin, abs(speed));
     digitalWrite(m.direction_pin_1, reversed);
     digitalWrite(m.direction_pin_2, !reversed);
 }
