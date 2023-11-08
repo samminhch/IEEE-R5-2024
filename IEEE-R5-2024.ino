@@ -31,6 +31,4 @@ void loop() {
     sprintf(buffer, "Left_Motor_Speed:%d,Right_Motor_Speed:%d",
             left_speed, right_speed);
     Serial.println(buffer);
-    // spin_motor(left_motor, 255);
-    // spin_motor(right_motor, 255);
 }
