@@ -1,21 +1,23 @@
+#include "Arduino.h"
 #include "robot-movement.h"
-
-int encoder_counter = 0;
 
 void setup_motor(motor m) {
     pinMode(m.speed_pin, OUTPUT);
-    pinMode(m.direction_pin_1, OUTPUT);
-    pinMode(m.direction_pin_2, OUTPUT);
+    pinMode(m.backward_dir_pin, OUTPUT);
+    pinMode(m.forward_dir_pin, OUTPUT);
+    pinMode(m.encoder_pin, INPUT);
 
-    digitalWrite(m.direction_pin_1, LOW);
-    digitalWrite(m.direction_pin_2, LOW);
+    m.encoder_count = 0;
+
+    digitalWrite(m.backward_dir_pin, LOW);
+    digitalWrite(m.forward_dir_pin, LOW);
 }
 
 void move_robot(double inches, double degrees) {}
 
 void stop_motor(motor m) {
-    digitalWrite(m.direction_pin_1, LOW);
-    digitalWrite(m.direction_pin_2, LOW);
+    digitalWrite(m.backward_dir_pin, LOW);
+    digitalWrite(m.forward_dir_pin, LOW);
 }
 
 void spin_motor(motor m, int speed) {
@@ -28,6 +30,6 @@ void spin_motor(motor m, int speed) {
         return;
     }
     analogWrite(m.speed_pin, abs(speed));
-    digitalWrite(m.direction_pin_1, reversed);
-    digitalWrite(m.direction_pin_2, !reversed);
+    digitalWrite(m.backward_dir_pin, reversed);
+    digitalWrite(m.forward_dir_pin, !reversed);
 }
