@@ -14,7 +14,7 @@ void setup_motor(motor m)
     digitalWrite(m.forward_dir_pin, LOW);
 }
 
-void move_robot(double inches, double degrees) {}
+void move_robot(double inches, motor left, motor right) {}
 
 void stop_motor(motor m)
 {

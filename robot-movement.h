@@ -14,7 +14,7 @@ struct motor
         const int backward_dir_pin;
         const int forward_dir_pin;
         const int encoder_pin;
-        int encoder_count;
+        volatile int encoder_count;
 };
 
 // define constants
@@ -28,7 +28,7 @@ const int MOTOR_MIN          = -MOTOR_MAX;
 void setup_motor(motor);
 
 // this function is subject to change
-void move_robot(motor left, motor right, double inches, double degrees);
+void move(double inches, motor left, motor right);
 
 // speed should be a value from MOTOR_MIN->MOTOR_MAX
 void spin_motor(motor, int speed);
