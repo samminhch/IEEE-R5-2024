@@ -1,7 +1,8 @@
 #include "Arduino.h"
 #include "robot-movement.h"
 
-void setup_motor(motor m) {
+void setup_motor(motor m)
+{
     pinMode(m.speed_pin, OUTPUT);
     pinMode(m.backward_dir_pin, OUTPUT);
     pinMode(m.forward_dir_pin, OUTPUT);
@@ -15,16 +16,21 @@ void setup_motor(motor m) {
 
 void move_robot(double inches, double degrees) {}
 
-void stop_motor(motor m) {
+void stop_motor(motor m)
+{
     digitalWrite(m.backward_dir_pin, LOW);
     digitalWrite(m.forward_dir_pin, LOW);
 }
 
-void spin_motor(motor m, int speed) {
+void spin_motor(motor m, int speed)
+{
     bool reversed = speed < 0;
-    if (speed < MOTOR_MIN || speed > MOTOR_MAX) {
+    if (speed < MOTOR_MIN || speed > MOTOR_MAX)
+    {
         char buffer[64];
-        sprintf(buffer, "%d is not in the range of %d->%d. Not executing function.", speed, MOTOR_MIN, MOTOR_MAX);
+        sprintf(buffer,
+                "%d is not in the range of %d->%d. Not executing function.",
+                speed, MOTOR_MIN, MOTOR_MAX);
         Serial.println(buffer);
 
         return;

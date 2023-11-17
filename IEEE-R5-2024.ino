@@ -7,7 +7,8 @@ const motor right_motor{6, 7, 8};
 const int pot_left  = A2;
 const int pot_right = A1;
 
-void setup() {
+void setup()
+{
     // motor setup
     setup_motor(left_motor);
     setup_motor(right_motor);
@@ -15,7 +16,8 @@ void setup() {
     Serial.begin(9600);
 }
 
-void loop() {
+void loop()
+{
     int pot_left_val  = analogRead(pot_left);
     int pot_right_val = analogRead(pot_right);
 
@@ -28,7 +30,7 @@ void loop() {
 
     // print to serial monitor
     char buffer[STR_LEN];
-    sprintf(buffer, "Left_Motor_Speed:%d,Right_Motor_Speed:%d",
-            left_speed, right_speed);
+    sprintf(buffer, "Left_Motor_Speed:%d,Right_Motor_Speed:%d", left_speed,
+            right_speed);
     Serial.println(buffer);
 }

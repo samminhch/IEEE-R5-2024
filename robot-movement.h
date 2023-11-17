@@ -8,7 +8,8 @@
 #include <Arduino.h>
 
 // TODO maybe add an encoder count / value to this struct?
-struct motor {
+struct motor
+{
         const int speed_pin;
         const int backward_dir_pin;
         const int forward_dir_pin;
@@ -18,7 +19,7 @@ struct motor {
 
 // define constants
 const double WHEEL_RADIUS    = 0.33;  // inches
-const int ENCODER_DISK_COUNT = 50; // number of holes in encoder disk
+const int ENCODER_DISK_COUNT = 50;    // number of holes in encoder disk
 const int MOTOR_MAX          = 1023;
 const int MOTOR_MIN          = -MOTOR_MAX;
 

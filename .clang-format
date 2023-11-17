@@ -1,0 +1,55 @@
+---
+Language: Cpp
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments:
+  Enabled: true
+  AlignCompound: true
+  PadOperators: true
+AlignConsecutiveMacros: Consecutive
+# clang-format v17
+# AlignConsecutiveShortCaseStatements: Consecutive
+AlignEscapedNewlines: Left
+AlignOperands: Align
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+BinPackArguments: true
+BinPackParameters: true
+BitFieldColonSpacing: After
+BreakStringLiterals: true
+BreakBeforeBraces: Allman
+# BreakTemplateDeclarationsStyle: Multiline
+ColumnLimit: 80
+# EmptyLineBeforeAccessModifierStyle: LogicalBlock
+IndentAccessModifiers: true
+IncludeBlocks: Regroup
+IndentCaseLabels: true
+IndentPPDirectives: BeforeHash
+IndentWidth: 4
+InsertBraces: true
+# clang-format v16
+# InsertNewlineAtEOF: false
+# IntegerLiteralSeparator:
+#   Binary: 4
+#   Decimal: 3
+MaxEmptyLinesToKeep: 1
+PPIndentWidth: -1
+ReferenceAlignment: Right
+ReflowComments: true
+SeparateDefinitionBlocks: Always
+SpaceAfterCStyleCast: true
+SpaceAfterLogicalNot: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCtorInitializerColon: false
+SpaceBeforeInheritanceColon: false
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: false
+SpacesBeforeTrailingComments: 2
+TabWidth: 4
+...
