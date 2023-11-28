@@ -1,11 +1,13 @@
 /*
-  robot-movement.h - Library for dual-motor robotics movement. This assumes that
-  you are using a DC motor connected to a L293D
-*/
+ * robot-movement.h - Library for dual-motor robotics movement. This assumes
+ * that you are using a DC motor connected to a L293D, as well as an otpical
+ * encoder with an encoder disk
+ */
 #ifndef ROBOT_MOVEMENT_H_
-#define ROBOT_MOVEMENT_H_
+    #define ROBOT_MOVEMENT_H_
 
-#include <Arduino.h>
+    #include <Arduino.h>
+    #include <stdlib.h>
 
 // TODO maybe add an encoder count / value to this struct?
 struct motor
@@ -18,7 +20,7 @@ struct motor
 };
 
 // define constants
-const double WHEEL_RADIUS    = 0.33;  // inches
+const double WHEEL_RADIUS    = 0.33;  // wheel radius (inches)
 const int ENCODER_DISK_COUNT = 50;    // number of holes in encoder disk
 const int MOTOR_MAX          = 1023;
 const int MOTOR_MIN          = -MOTOR_MAX;
