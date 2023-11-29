@@ -19,7 +19,7 @@ double get_distance(motor m) { return (float) m.encoder_count / ENCODER_DISK_COU
 // i need to test if this code works somehow
 void move(double inches, motor left, motor right)
 {
-    int kP, kI, kD;
+    int kP, kI, kD;                    // TODO set these values later
     int speed      = MOTOR_MAX * 0.8;  // 80% of max motor speed
     long prev_time = micros();
 
@@ -48,9 +48,9 @@ void move(double inches, motor left, motor right)
         float result_l = proportional_l + integral_l + derivative_l;
         float result_r = proportional_r + integral_r + derivative_r;
 
-        spin_motor(left, result_l);
-        spin_motor(right, result_r);
-        
+        spin_motor(left, speed + result_l);
+        spin_motor(right, speed + result_r);
+
         char buffer[64];
         sprintf(buffer, "pid_left:%.2f,pid_right:%.2f\n", result_l, result_r);
     } while (abs(error_sum_l) < 0.1 && abs(error_sum_r) < 0.1);
