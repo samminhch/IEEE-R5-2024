@@ -20,17 +20,20 @@ struct motor
 };
 
 // define constants
-const double WHEEL_RADIUS    = 0.33;  // wheel radius (inches)
-const int ENCODER_DISK_COUNT = 50;    // number of holes in encoder disk
-const int MOTOR_MAX          = 1023;
-const int MOTOR_MIN          = -MOTOR_MAX;
+const double WHEEL_RADIUS        = 0.33;  // wheel radius (inches)
+const double DIST_BETWEEN_WHEELS = 12;    // distance between wheels (inches)
+const int ENCODER_DISK_COUNT     = 50;    // number of holes in encoder disk
+const int MOTOR_MAX              = 1023;
+const int MOTOR_MIN              = -MOTOR_MAX;
 
 // Should only be called once in the setup function. Sets up the pinModes and
 // input status for the left and right motors
 void setup_motor(motor);
 
-// this function is subject to change
+// TODO calibrate the PID values within this function
 void move(double inches, motor left, motor right);
+
+void turn(double degrees, motor left, motor right);
 
 // speed should be a value from MOTOR_MIN->MOTOR_MAX
 void spin_motor(motor, int speed);
