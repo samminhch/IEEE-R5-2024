@@ -23,7 +23,7 @@ BitFieldColonSpacing: After
 BreakStringLiterals: true
 BreakBeforeBraces: Allman
 # BreakTemplateDeclarationsStyle: Multiline
-ColumnLimit: 80
+ColumnLimit: 120
 # EmptyLineBeforeAccessModifierStyle: LogicalBlock
 IndentAccessModifiers: true
 IncludeBlocks: Regroup
