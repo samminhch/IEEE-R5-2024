@@ -7,6 +7,7 @@
     #define ROBOT_MOVEMENT_H_
 
     #include <Arduino.h>
+    #include <QuickPID.h>
     #include <stdlib.h>
 
 // TODO maybe add an encoder count / value to this struct?
@@ -20,9 +21,9 @@ struct motor
 };
 
 // define constants
-const double WHEEL_RADIUS        = 0.33;  // wheel radius (inches)
-const double DIST_BETWEEN_WHEELS = 12;    // distance between wheels (inches)
-const int ENCODER_DISK_COUNT     = 50;    // number of holes in encoder disk
+const double WHEEL_RADIUS        = 1.5;  // wheel radius (inches)
+const double DIST_BETWEEN_WHEELS = 12;   // distance between wheels (inches)
+const int ENCODER_DISK_COUNT     = 60;   // number of holes in encoder disk
 const int MOTOR_MAX              = 1023;
 const int MOTOR_MIN              = -MOTOR_MAX;
 
@@ -31,9 +32,9 @@ const int MOTOR_MIN              = -MOTOR_MAX;
 void setup_motor(motor);
 
 // TODO calibrate the PID values within this function
-void move(double inches, motor left, motor right);
+void move(double inches, motor *left, motor *right);
 
-void turn(double degrees, motor left, motor right);
+void turn(double degrees, motor *left, motor *right);
 
 // speed should be a value from MOTOR_MIN->MOTOR_MAX
 void spin_motor(motor, int speed);
