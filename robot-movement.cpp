@@ -15,58 +15,53 @@ void setup_motor(motor m)
 }
 
 // i need to test if this code works somehow
-void move(double inches, motor left, motor right)
+void move(double inches, motor *left, motor *right)
 {
-    int kP, kI, kD;                       // TODO set these values later
-    int speed         = MOTOR_MAX * 0.8;  // 80% of max motor speed
-    long prev_time    = micros();
-    int num_rotations = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
-    double error_l, error_r, prev_error_l, prev_error_r, error_sum_l, error_sum_r;
+    left->encoder_count  = 0;
+    right->encoder_count = 0;
+    int max_speed        = MOTOR_MAX * 0.8;  // 80% of max motor speed
+    float num_holes  = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
+    int kP = 0.1, kI = 0, kD = 0;  // TODO set these values later
+    float result_l, result_r;
 
+    QuickPID pid_left((float *) &left->encoder_count, &result_l, &num_holes);
+    QuickPID pid_right((float *) &right->encoder_count, &result_r, &num_holes);
+
+    pid_left.SetTunings(kP, kI, kD);
+    pid_right.SetTunings(kP, kI, kD);
+    pid_left.SetOutputLimits(-max_speed, max_speed);
+    pid_right.SetOutputLimits(-max_speed, max_speed);
+
+    pid_left.SetMode(QuickPID::Control::automatic);
+    pid_right.SetMode(QuickPID::Control::automatic);
     do
     {
-        error_l = inches - left.encoder_count;
-        error_r = inches - right.encoder_count;
-
-        error_sum_l += error_l;
-        error_sum_r += error_r;
-
-        // we might have to adjust the time_elapsed's scale
-        double time_elapsed = micros() - prev_time;
-        prev_time           = time_elapsed;
-
-        double proportional_l = kP * error_l * time_elapsed;
-        double proportional_r = kP * error_r * time_elapsed;
-
-        double integral_l = kI * error_sum_l * time_elapsed;
-        double integral_r = kI * error_sum_r * time_elapsed;
-
-        double derivative_l = kD * (error_l - prev_error_l) / time_elapsed;
-        double derivative_r = kD * (error_r - prev_error_r) / time_elapsed;
-
-        float result_l = proportional_l + integral_l + derivative_l;
-        float result_r = proportional_r + integral_r + derivative_r;
-
-        spin_motor(left, speed + result_l);
-        spin_motor(right, speed + result_r);
+        if (pid_left.Compute())
+        {
+            spin_motor(*left, result_l);
+        }
+        if (pid_right.Compute())
+        {
+            spin_motor(*right, result_r);
+        }
 
         char buffer[64];
         sprintf(buffer, "pid_left:%.2f,pid_right:%.2f\n", result_l, result_r);
-    } while (abs(error_sum_l) < 0.1 && abs(error_sum_r) < 0.1);
+    } while (left->encoder_count < num_holes && right->encoder_count < num_holes);
 }
 
-void turn(double degrees, motor left, motor right)
+void turn(double degrees, motor *left, motor *right)
 {
-    int num_rotations   = (DIST_BETWEEN_WHEELS * degrees) / (WHEEL_RADIUS * 360);
-    int speed           = 80;
-    left.encoder_count  = 0;
-    right.encoder_count = 0;
+    int num_rotations    = (DIST_BETWEEN_WHEELS * degrees) / (WHEEL_RADIUS * 360);
+    int speed            = 80;
+    left->encoder_count  = 0;
+    right->encoder_count = 0;
 
-    spin_motor(right, degrees > 0 ? -speed : speed);
-    spin_motor(left, degrees > 0 ? speed : -speed);
+    spin_motor(*right, degrees > 0 ? -speed : speed);
+    spin_motor(*left, degrees > 0 ? speed : -speed);
 
     // hold the program hostage until the turns complete
-    while (left.encoder_count < num_rotations && right.encoder_count < num_rotations)
+    while (left->encoder_count < num_rotations && right->encoder_count < num_rotations)
         ;
 }
 
