@@ -21,9 +21,9 @@ struct motor
 };
 
 // define constants
-const double WHEEL_RADIUS        = 1.5;  // wheel radius (inches)
-const double DIST_BETWEEN_WHEELS = 12;   // distance between wheels (inches)
-const int ENCODER_DISK_COUNT     = 60;   // number of holes in encoder disk
+const double WHEEL_RADIUS        = 1.5;        // wheel radius (inches)
+const double DIST_BETWEEN_WHEELS = 3.937008;   // distance between wheels (inches)
+const int ENCODER_DISK_COUNT     = 60;         // number of holes in encoder disk
 const int MOTOR_MAX              = 1023;
 const int MOTOR_MIN              = -MOTOR_MAX;
 
