@@ -29,8 +29,8 @@ void move(double inches, motor *left, motor *right)
 
     pid_left.SetTunings(kP, kI, kD);
     pid_right.SetTunings(kP, kI, kD);
-    pid_left.SetOutputLimits(-max_speed, max_speed);
-    pid_right.SetOutputLimits(-max_speed, max_speed);
+    pid_left.SetOutputLimits(0, 100); // spin_motor takes speed %
+    pid_right.SetOutputLimits(0, 100);
 
     pid_left.SetMode(QuickPID::Control::automatic);
     pid_right.SetMode(QuickPID::Control::automatic);
