@@ -29,28 +29,25 @@ void move(double inches, motor *left, motor *right)
 
     pid_left.SetTunings(kP, kI, kD);
     pid_right.SetTunings(kP, kI, kD);
-    pid_left.SetOutputLimits(-max_speed, max_speed);
-    pid_right.SetOutputLimits(-max_speed, max_speed);
+    pid_left.SetOutputLimits(0, 100); // spin_motor receives speed percentage
+    pid_right.SetOutputLimits(0, 100);
 
     pid_left.SetMode(QuickPID::Control::automatic);
     pid_right.SetMode(QuickPID::Control::automatic);
-
-    // spin_motor(motor m, int speed_percentage) -> speed_pl = "speed percentage for left motor"
-    int speed_pl = map(result_l, 0, max_speed, 0, 100); // result_l always < max_speed
-    int speed_pr = map(result_r, 0, max_speed, 0, 100); // result_r always < max_speed 
+    
     do
     {
         if (pid_left.Compute())
         {
-            spin_motor(*left, speed_pl);
+            spin_motor(*left, result_l);
         }
         if (pid_right.Compute())
         {
-            spin_motor(*right, speed_pr);
+            spin_motor(*right, result_r);
         }
 
         char buffer[64];
-        sprintf(buffer, "pid_left:%.2f,pid_right:%.2f\n", speed_pl, speed_pr);
+        sprintf(buffer, "pid_left:%.2f,pid_right:%.2f\n", result_l, result_r);
     } while (left->encoder_count < num_holes && right->encoder_count < num_holes);
 }
 
