@@ -17,29 +17,23 @@ void setup()
     attachInterrupt(digitalPinToInterrupt(right_motor.encoder_pin), update_right_encoder, RISING);
 
     Serial.begin(9600);
-}
 
-// enable or disable the tests that you want
-void loop()
-{
-    // testing turns
-    turn(90, left_motor, right_motor);
-    delay(1000);
-    turn(-90, left_motor, right_motor);
-    delay(1000);
-    turn(180, left_motor, right_motor);
-    delay(1000);
-
-    // testing movement
+    // testing!!! 
+    delay(2500);
     unsigned long start_time = micros();
-    move(12, left_motor, right_motor)
+    move(12, &left_motor, &right_motor);
     unsigned long time_elapsed = micros() - start_time;
     Serial.print("robot travelled at a speed (in/s): ");
-    Serial.println(12 / time_elapsed * 1000000);
-    turn(180, left_motor, right_motor);
-    move(12, left_motor, right_motor)
+    // spin_motor(left_motor, 100);
+    // spin_motor(right_motor, 100);
+    // delay(2500);
+    // stop_motor(left_motor);
+    // stop_motor(right_motor);
 }
 
+void loop() {
+    // we don't want anything to repeat atm
+}
 void update_left_encoder()
 {
     pinMode(left_motor.encoder_pin, INPUT);
