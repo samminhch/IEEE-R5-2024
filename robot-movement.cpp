@@ -19,13 +19,12 @@ void move(double inches, motor *left, motor *right)
 {
     left->encoder_count  = 0;
     right->encoder_count = 0;
-    int max_speed        = MOTOR_MAX * 0.8;  // 80% of max motor speed
     float num_holes  = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
     int kP = 0.1, kI = 0, kD = 0;  // TODO set these values later
     float result_l, result_r;
 
-    QuickPID pid_left((float *) &left->encoder_count, &result_l, &num_holes);
-    QuickPID pid_right((float *) &right->encoder_count, &result_r, &num_holes);
+    QuickPID pid_left((float *) &(left->encoder_count), &result_l, &num_holes);
+    QuickPID pid_right((float*) &(right->encoder_count), &result_r, &num_holes);
 
     pid_left.SetTunings(kP, kI, kD);
     pid_right.SetTunings(kP, kI, kD);
@@ -38,22 +37,26 @@ void move(double inches, motor *left, motor *right)
     {
         if (pid_left.Compute())
         {
-            spin_motor(*left, result_l);
+            spin_motor(*left, 100 - result_l);
         }
         if (pid_right.Compute())
         {
-            spin_motor(*right, result_r);
+            spin_motor(*right, 100 -result_r);
         }
 
-        char buffer[64];
-        sprintf(buffer, "pid_left:%.2f,pid_right:%.2f\n", result_l, result_r);
+        Serial.print("pid_left:");
+        Serial.print(result_l);
+        Serial.print(",pid_right:");
+        Serial.println(result_r);
     } while (left->encoder_count < num_holes && right->encoder_count < num_holes);
+    stop_motor(*left);
+    stop_motor(*right);
 }
 
 void turn(double degrees, motor *left, motor *right)
 {
-    int num_rotations    = (DIST_BETWEEN_WHEELS * degrees) / (WHEEL_RADIUS * 360);
-    int speed            = 80;
+    int num_rotations    = (DIST_BETWEEN_WHEELS * degrees / 2) / (WHEEL_RADIUS * 360) * ENCODER_DISK_COUNT ;
+    int speed            = 100;
     left->encoder_count  = 0;
     right->encoder_count = 0;
 
@@ -61,8 +64,17 @@ void turn(double degrees, motor *left, motor *right)
     spin_motor(*left, degrees > 0 ? speed : -speed);
 
     // hold the program hostage until the turns complete
-    while (left->encoder_count < num_rotations && right->encoder_count < num_rotations)
-        ;
+    while (abs(left->encoder_count) < abs(num_rotations) && abs(right->encoder_count) < abs(num_rotations)) {
+        // Serial.print("encoder_count_required:");
+        // Serial.print(num_rotations);
+        // Serial.print(",left_encoder_count:");
+        // Serial.print(left->encoder_count);
+        // Serial.print(",right_encoder_count:");
+        // Serial.println(right->encoder_count);
+    }
+
+    stop_motor(*left);
+    stop_motor(*right);
 }
 
 void stop_motor(motor m)
