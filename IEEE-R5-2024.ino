@@ -21,9 +21,12 @@ void setup()
     // testing!!! 
     delay(2500);
     unsigned long start_time = micros();
-    move(12, &left_motor, &right_motor);
-    unsigned long time_elapsed = micros() - start_time;
+    int dist = 30;
+    move(dist, &left_motor, &right_motor);
+    float time_elapsed = (micros() - start_time) / 1000000.0;
     Serial.print("robot travelled at a speed (in/s): ");
+    Serial.println(dist / time_elapsed);
+    // turn(270, &left_motor, &right_motor);
     // spin_motor(left_motor, 100);
     // spin_motor(right_motor, 100);
     // delay(2500);
@@ -46,10 +49,10 @@ void update_left_encoder()
 
 void update_right_encoder()
 {
-    pinMode(right_motor.encoder_pin, INPUT);
-    right_motor.encoder_count += digitalRead(right_motor.forward_dir_pin) ? 1 : -1;
+    pinMode(right_motor.encoder_pin, INPUT); right_motor.encoder_count += digitalRead(right_motor.forward_dir_pin) ? 1 : -1;
     pinMode(right_motor.encoder_pin, OUTPUT);
 
     Serial.print("right_motor_encoder_count:");
-    Serial.println(right_motor.encoder_count);
+    Serial.print(right_motor.encoder_count);
+    Serial.print("\t\t");
 }
