@@ -20,34 +20,33 @@ void move(double inches, motor *left, motor *right)
     left->encoder_count  = 0;
     right->encoder_count = 0;
     float num_holes  = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
-    int kP = 0.1, kI = 0, kD = 0;  // TODO set these values later
-    float result_l, result_r;
 
-    QuickPID pid_left((float *) &(left->encoder_count), &result_l, &num_holes);
-    QuickPID pid_right((float*) &(right->encoder_count), &result_r, &num_holes);
+    unsigned long prev_time = millis();
 
-    pid_left.SetTunings(kP, kI, kD);
-    pid_right.SetTunings(kP, kI, kD);
-    pid_left.SetOutputLimits(0, 100); // spin_motor takes speed %
-    pid_right.SetOutputLimits(0, 100);
+    float left_speed = 100;
+    float right_speed = left_speed;
+    float cope_factor = 1.5;
 
-    pid_left.SetMode(QuickPID::Control::automatic);
-    pid_right.SetMode(QuickPID::Control::automatic);
     do
     {
-        if (pid_left.Compute())
-        {
-            spin_motor(*left, 100 - result_l);
-        }
-        if (pid_right.Compute())
-        {
-            spin_motor(*right, 100 -result_r);
+        if (millis() - prev_time <= 20) {
+            continue;
         }
 
-        Serial.print("pid_left:");
-        Serial.print(result_l);
-        Serial.print(",pid_right:");
-        Serial.println(result_r);
+        spin_motor(*left, left_speed);
+        spin_motor(*right, right_speed);
+
+        int error = left->encoder_count - right->encoder_count;
+
+        if (error > 0) {
+            left_speed -= cope_factor;
+            right_speed += cope_factor;
+        } else if (error < 0){
+            left_speed += cope_factor;
+            right_speed -= cope_factor;
+        }
+
+        prev_time = millis();
     } while (left->encoder_count < num_holes && right->encoder_count < num_holes);
     stop_motor(*left);
     stop_motor(*right);
@@ -55,7 +54,8 @@ void move(double inches, motor *left, motor *right)
 
 void turn(double degrees, motor *left, motor *right)
 {
-    int num_rotations    = (DIST_BETWEEN_WHEELS * degrees / 2) / (WHEEL_RADIUS * 360) * ENCODER_DISK_COUNT ;
+    // check this equation later
+    int num_rotations    = (DIST_BETWEEN_WHEELS * degrees / 2) / (WHEEL_RADIUS * 360) * ENCODER_DISK_COUNT * 0.9 ;
     int speed            = 100;
     left->encoder_count  = 0;
     right->encoder_count = 0;
@@ -72,7 +72,6 @@ void turn(double degrees, motor *left, motor *right)
         // Serial.print(",right_encoder_count:");
         // Serial.println(right->encoder_count);
     }
-
     stop_motor(*left);
     stop_motor(*right);
 }
