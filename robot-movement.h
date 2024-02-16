@@ -1,36 +1,23 @@
-/*
-  robot-movement.h - Library for dual-motor robotics movement. This assumes that
-  you are using a DC motor connected to a L293D
-*/
-#ifndef ROBOT_MOVEMENT_H_
-#define ROBOT_MOVEMENT_H_
+#ifndef ROBOT_MOVEMENT_H
+#define ROBOT_MOVEMENT_H
 
-#include <Arduino.h>
+#include "Arduino.h"
 
-// TODO maybe add an encoder count / value to this struct?
 struct motor {
-        const int speed_pin;
-        const int direction_pin_1;
-        const int direction_pin_2;
-        const int encoder_pin;
-        int encoder_count;
+    int speed_pin;
+    int backward_dir_pin;
+    int forward_dir_pin;
+    int encoder_pin;
+    volatile int encoder_count;
 };
 
-// define constants
-const double WHEEL_RADIUS = 0.33;  // inches
-const int MOTOR_MAX       = 1023;
-const int MOTOR_MIN       = -MOTOR_MAX;
-
-// Should only be called once in the setup function. Sets up the pinModes and
-// input status for the left and right motors
-void setup_motor(motor);
-
-void move_robot(motor left, motor right, double inches, double degrees);
-
-// speed should be a value from MOTOR_MIN->MOTOR_MAX
-void spin_motor(motor, int speed);
-
-// sets both direction pins of motor to LOW
-void stop_motor(motor);
+void setup_motor(motor m);
+void move(double inches, motor *left, motor *right);
+void turn(double degrees, motor *left, motor *right);
+void stop_motor(motor m);
+void spin_motor(motor m, int speed_percentage);
+void update_left_encoder();
+void update_right_encoder();
+int readDipSwitch();
 
 #endif
