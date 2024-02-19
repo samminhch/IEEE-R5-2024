@@ -15,80 +15,65 @@ void setup_motor(motor m)
 }
 
 // i need to test if this code works somehow
+// Rewriting the PID control function from 2/8 meeting -MH
+
 void move(double inches, motor *left, motor *right)
 {
     left->encoder_count     = 0;
     right->encoder_count    = 0;
-    float num_holes         = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
-    int input_left          = left->encoder_count;
-    int input_right         = right->encoder_count;
-    int prev_input_left     = input_left;
-    int prev_input_right    = input_right;
-    int error_left          = num_holes - input_left;
-    int error_right         = num_holes - input_right;
-    int prev_error_left     = error_left;
-    int prev_error_right    = error_right;
-    unsigned long prev_time = micros();
+    float setpoint         = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
+    int actual_left          = left->encoder_count;
+    int actual_right         = right->encoder_count;
+    unsigned long prev_time = 0;
+    float output_left = 0.0;
+    float output_right = 0.0;
+    float dt = 0.0;
+    float integral_left = 0.0;
+    float integral_right = 0.0;
+    float previous_left = 0.0;
+    float previous_right = 0.0;
 
     // PID constants
-    float kP = 2;
-    float kI = 0;
-    float kD = 0;
+    float kP = 0.8;
+    float kI = 0.20;
+    float kD = 0.001;
 
+    // Start spinning motors
     spin_motor(*left, 100);
     spin_motor(*right, 100);
+    
     do
     {
-        unsigned long time      = micros();
-        unsigned long time_diff = time - prev_time;
+        unsigned long now      = millis();
+        dt = now - prev_time / 1000.0; // time in SEC
+        prev_time = now;
+        
+        actual_left = left->encoder_count;
+        actual_right = right->encoder_count;
+        
+        float error_left = setpoint - actual_left;
+        float error_right = setpoint - actual_right;
+        
+        float proportional_left = error_left;
+        float proportional_right = error_right;
+        
+        integral_left = error_left * dt;
+        integral_right = error_right * dt;
+        
+        float derivative_left = (error_left - previous_left) / dt;
+        float derivative_right = (error_right - previous_right) / dt;
+        
+        previous_left = error_left;
+        previous_right = error_right;
+        
+        output_left = (kP * proportional_left) + (kI * integral_left) + (kD * derivative_left);
+        output_right = (kP * proportional_right) + (kI * integral_right) + (kD * derivative_right);
+        
+        // Mapping PID results to motor speed percentages
+        float motor_left = map(output_left, 0, setpoint, 90, 100);
+        float motor_right = map(output_right, 0, setpoint, 90, 100);
 
-        // compute every 20 microseconds (arbitrary value)
-        if (time_diff < 20)
-        {
-            continue;
-        }
-
-        // update input and error values
-        input_left  = left->encoder_count;
-        input_right = right->encoder_count;
-        error_left  = num_holes - input_left;
-        error_right = num_holes - input_right;
-
-        int input_diff_left  = input_left - prev_input_left;
-        int input_diff_right = input_right - prev_input_right;
-
-        int error_diff_left  = error_left - prev_error_left;
-        int error_diff_right = error_right - prev_error_right;
-
-        float p_left  = kP * error_left - kP * input_diff_left;
-        float p_right = kP * error_right - kP * input_diff_right;
-
-        float i_left  = kI * error_left;
-        float i_right = kI * error_right;
-
-        float d_left  = kD * error_diff_left;
-        float d_right = kD * error_diff_right;
-
-        // update previous values
-        prev_input_left  = input_left;
-        prev_input_right = input_right;
-        prev_error_left  = error_left;
-        prev_error_right = error_right;
-
-        float output_left  = p_left + i_left + d_left;
-        float output_right = p_right + i_right + d_right;
-
-        // print out the result (debugging)
-        // Serial.print("result_left: ");
-        // Serial.print(output_left);
-        // Serial.print("\t\t\tresult_right: ");
-        // Serial.println(output_right);
-
-        // do something with these outputs?
-        float motor_left = map(output_left, 0, num_holes, 90, 100);
-        float motor_right = map(output_right, 0, num_holes, 90, 100);
-
-        // print out the result (debugging)
+        // print out the motor speed results (debugging)
         Serial.print("result_left: ");
         Serial.print(motor_left);
         Serial.print("\t\t\tresult_right: ");
@@ -96,9 +81,13 @@ void move(double inches, motor *left, motor *right)
 
         spin_motor(*left, motor_left);
         spin_motor(*right, motor_right);
-    } while (left->encoder_count < num_holes && right->encoder_count < num_holes);
+        
+
+    }while (left->encoder_count < setpoint && right->encoder_count < setpoint);
+    
     stop_motor(*left);
     stop_motor(*right);
+    
 }
 
 void turn(double degrees, motor *left, motor *right)
