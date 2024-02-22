@@ -1,33 +1,49 @@
 #include "robot-movement.h"
 
-int encoder_counter = 0;
-
-void setup_motor(motor m) {
+void setup_motor(motor m)
+{
     pinMode(m.speed_pin, OUTPUT);
-    pinMode(m.direction_pin_1, OUTPUT);
-    pinMode(m.direction_pin_2, OUTPUT);
+    pinMode(m.backward_dir_pin, OUTPUT);
+    pinMode(m.forward_dir_pin, OUTPUT);
+    pinMode(m.encoder_pin, INPUT);
 
-    digitalWrite(m.direction_pin_1, LOW);
-    digitalWrite(m.direction_pin_2, LOW);
+    m.encoder_count = 0;
+
+    stop_motor(m);
 }
 
-void move_robot(double inches, double degrees) {}
-
-void stop_motor(motor m) {
-    digitalWrite(m.direction_pin_1, LOW);
-    digitalWrite(m.direction_pin_2, LOW);
+void move(double inches, motor *left, motor *right)
+{
+    // Implement move functionality
 }
 
-void spin_motor(motor m, int speed) {
-    bool reversed = speed < 0;
-    if (speed < MOTOR_MIN || speed > MOTOR_MAX) {
-        char buffer[64];
-        sprintf(buffer, "%d is not in the range of %d->%d. Not executing function.", speed, MOTOR_MIN, MOTOR_MAX);
-        Serial.println(buffer);
+void turn(double degrees, motor *left, motor *right)
+{
+    // Implement turn functionality
+}
 
-        return;
-    }
-    analogWrite(m.speed_pin, abs(speed));
-    digitalWrite(m.direction_pin_1, reversed);
-    digitalWrite(m.direction_pin_2, !reversed);
+void stop_motor(motor m)
+{
+    digitalWrite(m.backward_dir_pin, LOW);
+    digitalWrite(m.forward_dir_pin, LOW);
+}
+
+void spin_motor(motor m, int speed_percentage)
+{
+    // Implement spin motor functionality
+}
+
+void update_left_encoder()
+{
+    // Implement update left encoder functionality
+}
+
+void update_right_encoder()
+{
+    // Implement update right encoder functionality
+}
+
+int readDipSwitch()
+{
+    // Implement readDipSwitch functionality
 }
