@@ -12,16 +12,15 @@ void setup()
     // motor setup
     setup_motor(left_motor);
     setup_motor(right_motor);
-
     attachInterrupt(digitalPinToInterrupt(left_motor.encoder_pin), update_left_encoder, RISING);
     attachInterrupt(digitalPinToInterrupt(right_motor.encoder_pin), update_right_encoder, RISING);
 
     Serial.begin(9600);
 
-    // testing!!! 
+    // testing!!!
     delay(2500);
     unsigned long start_time = micros();
-    int dist = 30;
+    int dist                 = 50;
     move(dist, &left_motor, &right_motor);
     float time_elapsed = (micros() - start_time) / 1000000.0;
     Serial.print("robot travelled at a speed (in/s): ");
@@ -34,25 +33,26 @@ void setup()
     // stop_motor(right_motor);
 }
 
-void loop() {
+void loop()
+{
     // we don't want anything to repeat atm
 }
+
 void update_left_encoder()
 {
-    pinMode(left_motor.encoder_pin, INPUT);
     left_motor.encoder_count += digitalRead(left_motor.forward_dir_pin) ? 1 : -1;
-    pinMode(left_motor.encoder_pin, OUTPUT);
 
-    Serial.print("left_motor_encoder_count:" );
-    Serial.println(left_motor.encoder_count);
+    // debugging
+    // Serial.print("left_motor_encoder_count:" );
+    // Serial.println(left_motor.encoder_count);
 }
 
 void update_right_encoder()
 {
-    pinMode(right_motor.encoder_pin, INPUT); right_motor.encoder_count += digitalRead(right_motor.forward_dir_pin) ? 1 : -1;
-    pinMode(right_motor.encoder_pin, OUTPUT);
+    right_motor.encoder_count += digitalRead(right_motor.forward_dir_pin) ? 1 : -1;
 
-    Serial.print("right_motor_encoder_count:");
-    Serial.print(right_motor.encoder_count);
-    Serial.print("\t\t");
+    // debugging
+    // Serial.print("right_motor_encoder_count:");
+    // Serial.print(right_motor.encoder_count);
+    // Serial.print("\t\t");
 }
