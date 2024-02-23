@@ -3,8 +3,8 @@
 #define STR_LEN   64
 #define NUM_PATHS 8
 
-motor left_motor{6, 5, 4, 2};
-motor right_motor{9, 8, 7, 3};
+motor left_motor{9, 8, 7, 3};
+motor right_motor{5, 4, 6, 2};
 struct path
 {
         const double distance;
