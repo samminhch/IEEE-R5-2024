@@ -3,6 +3,10 @@
 #define STR_LEN   64
 #define NUM_PATHS 8
 
+// ultrasonic sensor pins
+const int trigPin = 14;
+const int echoPin = 15;
+float duration, distance;
 motor left_motor{9, 8, 7, 3};
 motor right_motor{5, 4, 6, 2};
 struct path
@@ -38,6 +42,9 @@ void setup()
     setup_motor(right_motor);
     attachInterrupt(digitalPinToInterrupt(left_motor.encoder_pin), update_left_encoder, RISING);
     attachInterrupt(digitalPinToInterrupt(right_motor.encoder_pin), update_right_encoder, RISING);
+    pinMode(trigPin, OUTPUT);
+    pinMode(echoPin, INPUT);
+    digitalWrite(trigPin, LOW);
 
     Serial.begin(9600);
 
@@ -63,6 +70,12 @@ void loop()
     move(paths_elimination[index].distance, &left_motor, &right_motor);
     turn(paths_elimination[index].angle_after, &left_motor, &right_motor);
     index = (index + 1) % NUM_PATHS;
+    // disabled for now for PID tests
+    // turn(paths_elimination[index].angle_before, &left_motor, &right_motor);
+    // move(paths_elimination[index].distance, &left_motor, &right_motor);
+    // turn(paths_elimination[index].angle_after, &left_motor, &right_motor);
+    // index = (index + 1) % NUM_PATHS;
+    // getting dist
 }
 
 void update_left_encoder()
