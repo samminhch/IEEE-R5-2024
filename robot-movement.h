@@ -34,8 +34,6 @@ void setup_motor(motor);
 // TODO calibrate the PID values within this function
 void move(double inches, motor *left, motor *right);
 
-void move_stuffs(double inches, motor *left, motor *right);
-
 void turn(double degrees, motor *left, motor *right);
 
 // speed should be a value from MOTOR_MIN->MOTOR_MAX
