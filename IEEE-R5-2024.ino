@@ -48,20 +48,30 @@ void setup()
 
     Serial.begin(9600);
 
-    // testing!!!
-    delay(2500);
-    unsigned long start_time = micros();
-    int dist                 = 50;
-    move(dist, &left_motor, &right_motor);
-    float time_elapsed = (micros() - start_time) / 1000000.0;
-    Serial.print("robot travelled at a speed (in/s): ");
-    Serial.println(dist / time_elapsed);
-    // turn(270, &left_motor, &right_motor);
-    // spin_motor(left_motor, 100);
-    // spin_motor(right_motor, 100);
-    // delay(2500);
-    // stop_motor(left_motor);
-    // stop_motor(right_motor);
+    // straight line test
+    // unsigned long start_time = micros();
+    // int dist                 = 100;
+    // move(dist, &left_motor, &right_motor);
+    // float time_elapsed = (micros() - start_time) / 1000000.0;
+    // Serial.print("robot travelled at a speed (in/s): ");
+    // Serial.println(dist / time_elapsed);
+    
+    // turn test
+    // for (int i = 0; i < 4; i++) {
+    //     turn(90, &left_motor, &right_motor);
+    //     delay(2500);
+    // }
+
+    // straight line and back test
+    // move(12, &left_motor, &right_motor);
+    // move(12, &left_motor, &right_motor);
+
+
+    // square test
+    // for (int i = 0; i < 4; i++) {
+        // move(12, &left_motor, &right_motor);
+        // turn(90, &left_motor, &right_motor);
+    // }
 }
 
 void loop()
