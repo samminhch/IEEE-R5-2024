@@ -66,10 +66,14 @@ void move(double inches, motor *left, motor *right)
 
 void turn(double degrees, motor *left, motor *right)
 {
-    int num_rotations    = (DIST_BETWEEN_WHEELS * abs(degrees) / 2) / (WHEEL_RADIUS * 360) * ENCODER_DISK_COUNT * 0.9;
-    int speed            = 100;
-    left->encoder_count  = 0;
-    right->encoder_count = 0;
+    float wheel_circumference  = 2 * PI * WHEEL_RADIUS;
+    float arc_length           = radians(degrees) * DIST_BETWEEN_WHEELS / 2;
+    float num_rotations        = arc_length * ENCODER_DISK_COUNT / wheel_circumference;
+    num_rotations             *= 0.825;                        // it overturns, multiply it by a magic constant
+    num_rotations              = (int) (num_rotations + 0.5);  // rounding the value
+    int speed                  = 100;
+    left->encoder_count        = 0;
+    right->encoder_count       = 0;
 
     spin_motor(*right, degrees > 0 ? -speed : speed);
     spin_motor(*left, degrees > 0 ? speed : -speed);
