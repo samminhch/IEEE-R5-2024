@@ -81,12 +81,12 @@ void turn(double degrees, motor *left, motor *right)
     // hold the program hostage until the turns complete
     while (abs(left->encoder_count) < num_rotations && abs(right->encoder_count) < num_rotations)
     {
-        // Serial.print("encoder_count_required:");
-        // Serial.print(num_rotations);
-        // Serial.print(",left_encoder_count:");
-        // Serial.print(left->encoder_count);
-        // Serial.print(",right_encoder_count:");
-        // Serial.println(right->encoder_count);
+        Serial.print("encoder_count_required:");
+        Serial.print(num_rotations);
+        Serial.print(",left_encoder_count:");
+        Serial.print(left->encoder_count);
+        Serial.print(",right_encoder_count:");
+        Serial.println(right->encoder_count);
     }
     stop_motor(*left);
     stop_motor(*right);
