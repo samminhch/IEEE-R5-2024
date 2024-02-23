@@ -6,7 +6,8 @@
 // ultrasonic sensor pins
 const int trigPin = 14;
 const int echoPin = 15;
-float duration, distance;
+
+// motor pins
 motor left_motor{9, 8, 7, 3};
 motor right_motor{5, 4, 6, 2};
 struct path
@@ -76,16 +77,23 @@ void setup()
 
 void loop()
 {
-    turn(paths_elimination[index].angle_before, &left_motor, &right_motor);
-    move(paths_elimination[index].distance, &left_motor, &right_motor);
-    turn(paths_elimination[index].angle_after, &left_motor, &right_motor);
-    index = (index + 1) % NUM_PATHS;
-    // disabled for now for PID tests
+    // going through the paths
     // turn(paths_elimination[index].angle_before, &left_motor, &right_motor);
     // move(paths_elimination[index].distance, &left_motor, &right_motor);
     // turn(paths_elimination[index].angle_after, &left_motor, &right_motor);
     // index = (index + 1) % NUM_PATHS;
+
     // getting dist
+    // digitalWrite(trigPin, LOW);
+    // delayMicroseconds(5);
+    // digitalWrite(trigPin, HIGH);
+    // delayMicroseconds(10);
+    // digitalWrite(trigPin, LOW);
+    //
+    // unsigned long duration = pulseIn(echoPin, HIGH); // microseconds
+    // float inches = duration / 2.0 / 74;
+    // Serial.println("dist:");
+    // Serial.println(inches);
 }
 
 void update_left_encoder()
