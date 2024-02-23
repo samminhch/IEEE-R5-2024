@@ -94,7 +94,7 @@ void stop_motor(motor m)
     digitalWrite(m.forward_dir_pin, LOW);
 }
 
-void spin_motor(motor m, int speed_percentage)
+void spin_motor(motor m, float speed_percentage)
 {
     bool reversed = speed_percentage < 0;
     // cap the values at [0%, 100%]
