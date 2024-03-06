@@ -167,22 +167,22 @@ void setup()
 #endif
                 break;
             }
+#ifdef DEBUG
             else
             {
-#ifdef DEBUG
                 ERR_PRINTLN("MPU connection faled");
-#endif
             }
+#endif                        
         }
     }
+#ifdef DEBUG
     else
     {
-#ifdef DEBUG
         ERR_PRINT("DMP Initialization failed (code ");
         DPRINT(dev_status);
         DPRINT(")\n");
-#endif
     }
+#endif
 
     pinMode(LED_BUILTIN, OUTPUT);
 
@@ -279,10 +279,6 @@ bool get_yaw(float &degrees, uint8_t num_samples, unsigned long timeout_millis)
             successful_reads++;
 
             Quaternion q;
-            VectorFloat gravity;
-            VectorInt16 acceleration_raw;
-            VectorInt16 acceleration_real;
-
             mpu.dmpGetQuaternion(&q, fifo_buffer);
             yaw_sum += degrees(-atan2(2 * (q.w * q.z + -q.x * q.y), q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z));
         }
