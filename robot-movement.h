@@ -11,28 +11,20 @@
 // TODO maybe add an encoder count / value to this struct?
 struct motor
 {
-        const int speed_pin;
-        const int backward_dir_pin;
-        const int forward_dir_pin;
-        const int encoder_pin;
-        volatile int encoder_count;
+        const byte speed_pin;
+        const byte backward_dir_pin;
+        const byte forward_dir_pin;
 };
 
 // define constants
-const double WHEEL_RADIUS        = 1.5;               // wheel radius (inches)
-const double DIST_BETWEEN_WHEELS = 3.937008;          // distance between wheels (inches)
-const int ENCODER_DISK_COUNT     = 60;                // number of holes in encoder disk
-const int MOTOR_MAX              = 1023;              // fastest speed of motors on ground
-const int MOTOR_MIN              = 0.85 * MOTOR_MAX;  // slowest speed of motors on ground
+const PROGMEM int MOTOR_MAX = 1023;              // fastest speed of motors on ground
+const PROGMEM int MOTOR_MIN = 0.85 * MOTOR_MAX;  // slowest speed of motors on ground
 
 // Should only be called once in the setup function. Sets up the pinModes and
 // input status for the left and right motors
 void setup_motor(motor);
 
-void move(double inches, motor *left, motor *right);
-
-void turn(double degrees, motor *left, motor *right);
-
+// speed should be a value from 0->100%
 void spin_motor(motor, float speed);
 
 // sets both direction pins of motor to LOW
