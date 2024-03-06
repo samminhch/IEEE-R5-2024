@@ -3,21 +3,30 @@
 #define STR_LEN   64
 #define NUM_PATHS 8
 
-// ultrasonic sensor pins
-const int trigPin = 14;
-const int echoPin = 15;
+/**************
+ * ULTRASONIC *
+ **************/
+const byte trigPin = 14;
+const byte echoPin = 15;
 
-// motor pins
-motor left_motor{9, 8, 7, 3};
-motor right_motor{5, 4, 6, 2};
+/**********
+ * MOTORS *
+ **********/
+const PROGMEM motor left_motor{9, 8, 7};
+const PROGMEM motor right_motor{5, 4, 6};
+
+/**********
+ * PATHS *
+ **********/
 struct path
 {
-        const double distance;
-        const double angle_before;
-        const double angle_after;
+        const float distance;
+        const float angle_before;
+        const float angle_after;
 };
 
-const path paths_seeding[] = {
+int seeding_index     = 0;
+const PROGMEM path paths_seeding[] = {
     {6,  90, -90},
     {72, 0,  -90},
     {6,  0,  90 },
@@ -25,7 +34,8 @@ const path paths_seeding[] = {
     {12, 0,  0  }
 };
 
-const path paths_elimination[] = {
+int elimination_index = 0;
+const PROGMEM path paths_elimination[] = {
     {101.76, 45,  -135}, // A ➡️ D
     {107.28, -27, -153}, // D ➡️ H
     {75.84,  -71, -161}, // H ➡️ F
@@ -35,19 +45,19 @@ const path paths_elimination[] = {
     {75.84,  -18, -108}, // E ➡️ C
     {75.84,  -18, -108}, // C ➡️ A
 };
-int index = 0;
 
 void setup()
 {
     setup_motor(left_motor);
     setup_motor(right_motor);
-    attachInterrupt(digitalPinToInterrupt(left_motor.encoder_pin), update_left_encoder, RISING);
-    attachInterrupt(digitalPinToInterrupt(right_motor.encoder_pin), update_right_encoder, RISING);
+    // setup ultrasonic sensor
     pinMode(trigPin, OUTPUT);
     pinMode(echoPin, INPUT);
     digitalWrite(trigPin, LOW);
 
-    Serial.begin(9600);
+    /******************
+     * MOVEMENT TESTS *
+     ******************/
 
     // straight line test
     // unsigned long start_time = micros();
@@ -75,6 +85,10 @@ void setup()
     // }
 }
 
+unsigned long prev_time = millis();
+
+bool blink_status = true;
+
 void loop()
 {
     // going through the paths
@@ -94,23 +108,19 @@ void loop()
     // float inches = duration / 2.0 / 74;
     // Serial.println("dist:");
     // Serial.println(inches);
+    // blink every 500 milliseconds -- it's a lifeline!
+    unsigned long current_time = millis();
+    if (current_time - prev_time >= 500)
+    {
+        prev_time = current_time;
+        digitalWrite(LED_BUILTIN, blink_status);
+    }
 }
 
-void update_left_encoder()
 {
-    left_motor.encoder_count += digitalRead(left_motor.forward_dir_pin) ? 1 : -1;
 
-    // debugging
-    // Serial.print("left_motor_encoder_count:" );
-    // Serial.println(left_motor.encoder_count);
 }
 
-void update_right_encoder()
 {
-    right_motor.encoder_count += digitalRead(right_motor.forward_dir_pin) ? 1 : -1;
 
-    // debugging
-    // Serial.print("right_motor_encoder_count:");
-    // Serial.print(right_motor.encoder_count);
-    // Serial.print("\t\t");
 }
