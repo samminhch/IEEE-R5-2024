@@ -77,7 +77,7 @@ struct path
         const float angle_after;
 };
 
-int seeding_index     = 0;
+int seeding_index                  = 0;
 const PROGMEM path paths_seeding[] = {
     {6,  90, -90},
     {72, 0,  -90},
@@ -86,7 +86,7 @@ const PROGMEM path paths_seeding[] = {
     {12, 0,  0  }
 };
 
-int elimination_index = 0;
+int elimination_index                  = 0;
 const PROGMEM path paths_elimination[] = {
     {101.76, 45,  -135}, // A ➡️ D
     {107.28, -27, -153}, // D ➡️ H
@@ -100,6 +100,7 @@ const PROGMEM path paths_elimination[] = {
 
 void setup()
 {
+
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
     Wire.setClock(400e3);
