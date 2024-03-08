@@ -9,6 +9,8 @@
     #define GETYAW_DEBUG
 // comment out if you don't want to see debug prints on move()
     #define MOVE_DEBUG
+// comment out if you don't want to see debug prints on turn()
+    #define TURN_DEBUG;
     #define DPRINT(msg) Serial.print(msg);
     #define OK_PRINT(msg)           \
         Serial.print(F("[OKAY] ")); \
@@ -400,7 +402,15 @@ void turn(float degrees)
 
     while (abs(target_yaw - yaw) > yaw_threshold)
     {
+
         while (!get_yaw(yaw, 10))
             ;
+#ifdef TURN_DEBUG
+        DBG_PRINT("Yaw: ");
+        DPRINT(yaw);
+        DPRINT(F("\tTarget Yaw:"));
+        DPRINT(target_yaw);
+        DPRINT(F("\n"));
+#endif
     }
 }
