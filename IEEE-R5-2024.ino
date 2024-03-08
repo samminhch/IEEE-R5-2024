@@ -129,7 +129,22 @@ void setup()
 
     // setup mpu
     mpu.initialize();
-    byte dev_status = mpu.dmpInitialize();
+
+    mpu_connection_status = mpu.testConnection();
+#ifdef DEBUG
+    DBG_PRINTLN("Testing MPU6050 connection...");
+
+    if (mpu_connection_status)
+    {
+        OK_PRINTLN("MPU6050 connection successful");
+    }
+    else
+    {
+        ERR_PRINTLN("MPU6050 connection failed");
+    }
+#endif
+
+    uint8_t dev_status = mpu.dmpInitialize();
 
     // offsets from calibration -- run the calibration program yourself to get offsets
     mpu.setXAccelOffset(-3484);
@@ -158,24 +173,6 @@ void setup()
         DBG_PRINTLN("Enabling MPU's DMP...");
 #endif
         mpu.setDMPEnabled(true);
-
-        for (byte i = 0; i < 3; i++)
-        {
-            mpu_connection_status = mpu.testConnection();
-            if (mpu_connection_status)
-            {
-#ifdef DEBUG
-                OK_PRINTLN("MPU connection successful");
-#endif
-                break;
-            }
-#ifdef DEBUG
-            else
-            {
-                ERR_PRINTLN("MPU connection faled");
-            }
-#endif                        
-        }
     }
 #ifdef DEBUG
     else
@@ -218,7 +215,6 @@ void setup()
 }
 
 unsigned long prev_time = millis();
-
 bool blink_status = true;
 
 void loop()
