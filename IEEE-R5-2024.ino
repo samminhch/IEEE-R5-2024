@@ -297,7 +297,7 @@ bool get_yaw(float &degrees, uint8_t num_samples, unsigned long timeout_millis)
 
 // Sets the inches variable to the average of 5 calculated distances
 // Returns true if distance was read successfully, false otherwise
-bool get_dist(float &inches, uint8_t num_samples)
+bool get_dist(float &inches, uint8_t num_samples, unsigned long timeout_millis)
 {
     float inches_sum         = 0;
     uint8_t successful_reads = 0;
