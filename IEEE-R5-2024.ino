@@ -109,6 +109,7 @@ void setup()
 
 #ifdef DEBUG
     Serial.begin(115200);
+    delay(2000);
 #endif
 
     setup_motor(left_motor);
