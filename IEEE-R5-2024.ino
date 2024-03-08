@@ -215,7 +215,7 @@ void setup()
 }
 
 unsigned long prev_time = millis();
-bool blink_status = true;
+bool blink_status       = true;
 
 void loop()
 {
@@ -260,6 +260,7 @@ void loop()
     {
         prev_time = current_time;
         digitalWrite(LED_BUILTIN, blink_status);
+        blink_status = !blink_status;
     }
 }
 
