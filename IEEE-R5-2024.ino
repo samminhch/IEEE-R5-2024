@@ -47,11 +47,18 @@
 /**************
  * ULTRASONIC *
  **************/
-const byte trigPin = 14;
-const byte echoPin = 15;
+struct ultrasonic
+{
+        const byte trig_pin;
+        const byte echo_pin;
+};
+
+// can't store pins in PROGMEM, we're reading waaaay too quick for it to be useful
+const ultrasonic side{14, 15};
+const ultrasonic front{10, 16};
 // Sets the inches variable to the average of 5 calculated distances
 // Returns true if distance was read successfully, false otherwise
-bool get_dist(float &inches, uint8_t num_samples = 1, unsigned long timeout_millis = 100);
+bool get_dist(ultrasonic sensor, float &inches, uint8_t num_samples = 1, unsigned long timeout_millis = 100);
 
 /***********
  * MPU6050 *
