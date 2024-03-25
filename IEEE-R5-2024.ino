@@ -5,12 +5,14 @@
 // comment this out when not connected to computer (i.e. actually competing)
 // #define DEBUG
 #ifdef DEBUG
-// comment out if you don't want to see debug prints on get_yaw()
-    #define GETYAW_DEBUG
-// comment out if you don't want to see debug prints on move()
+    // comment out if you don't want to see debug prints on get_yaw()
+    // #define GETYAW_DEBUG
+    // comment out if you don't want to see debug prints on get_dist()
+    // #define GETDIST_DEBUG
+    // comment out if you don't want to see debug prints on move()
     #define MOVE_DEBUG
 // comment out if you don't want to see debug prints on turn()
-    #define TURN_DEBUG;
+// #define TURN_DEBUG  ;
     #define DPRINT(msg) Serial.print(msg);
     #define OK_PRINT(msg)           \
         Serial.print(F("[OKAY] ")); \
@@ -20,7 +22,7 @@
         Serial.println(F((msg)));
     #define ERR_PRINT(msg)           \
         Serial.print(F("[ERROR] ")); \
-        Serial.println(F((msg)));
+        Serial.print(F((msg)));
     #define ERR_PRINTLN(msg)         \
         Serial.print(F("[ERROR] ")); \
         Serial.println(F((msg)));
