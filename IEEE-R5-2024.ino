@@ -235,19 +235,16 @@ void setup()
     // }
 }
 
-unsigned long prev_time = millis();
-bool blink_status       = true;
-
 void loop()
 {
-    // end program if it can't connect to MPU
-    if (!mpu_connection_status)
-    {
 #ifdef DEBUG
-        ERR_PRINTLN("MPU connection failed... ending program");
+    DPRINT("left_motor_encoder_count: ");
+    DPRINT(left_motor.encoder_count);
+    DPRINT("\t");
+    DPRINT("right_motor_encoder_count: ");
+    DPRINT(right_motor.encoder_count);
+    DPRINT("\n");
 #endif
-        return;
-    }
 
     // going through the paths
     // turn(paths_elimination[elimination_index].angle_before);
@@ -257,32 +254,26 @@ void loop()
 
     // printing out values in debug mode!
 #ifdef DEBUG
-    float yaw, distance;
-    if (get_dist(distance))
-    {
-        DBG_PRINT("Distance (inches):")
-        DPRINT(distance);
-        DPRINT("\t");
-    }
+    float distance, yaw, side_distance;
+    get_dist(front, distance);
+    DBG_PRINT("Front Distance (inches):")
+    DPRINT(distance);
+    DPRINT("\t");
 
-    if (get_yaw(yaw))
+    get_dist(side, side_distance);
+    DPRINT("Side Distance (inches):")
+    DPRINT(side_distance);
+    DPRINT("\t");
+
+    if (mpu_connection_status && get_yaw(yaw))
     {
         // it does drift a little, but it's no big deal I think, it drifts
         // less than an angle after a while
-        DBG_PRINT("Yaw (degrees):\t");
+        DPRINT("Yaw (degrees):");
         DPRINT(yaw);
-        DPRINT("\n");
     }
+    DPRINT("\n");
 #endif
-
-    // blink every 500 milliseconds -- it's a lifeline!
-    unsigned long current_time = millis();
-    if (current_time - prev_time >= 500)
-    {
-        prev_time = current_time;
-        digitalWrite(LED_BUILTIN, blink_status);
-        blink_status = !blink_status;
-    }
 }
 
 bool get_yaw(float &degrees, uint8_t num_samples, unsigned long timeout_millis)
