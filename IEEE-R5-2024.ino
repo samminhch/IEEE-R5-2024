@@ -381,9 +381,10 @@ void encoder_move(double inches)
     // PID values
     // corresponds to `errors`
     float PIDs[][3] = {
+  //    P,   I    , D
         {10, 0.005, 0  },
-        {5,  0.01,  0.1},
-        {5,  0.01,  0.1},
+        {5,  0.01,  0.1}, // TODO these values need adjusting
+        {5,  0.01,  0.1}, // TODO these values need adjusting
     };
 
     while (left_motor.encoder_count < num_holes && right_motor.encoder_count < num_holes)
@@ -426,6 +427,7 @@ void encoder_move(double inches)
         float error_diff, PID_output;
         byte error_select;  // 0 = encoder counts, 1 = mpu, 2 = distance from wall
 
+        // comment out this section if you only want to stick to one method
         if (abs(errors[2][0]) >= 2)
         {
             error_select = 2;
@@ -447,8 +449,8 @@ void encoder_move(double inches)
         errors[1][2] = errors[1][0];
         errors[2][2] = errors[2][0];
 
-        left_speed  = base_speed + PID_output;
-        right_speed = base_speed - PID_output;
+        left_speed  = base_speed - PID_output;
+        right_speed = base_speed + PID_output;
     }
 
     // Serial.print("left_encoder_count:");
