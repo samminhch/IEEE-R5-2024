@@ -5,6 +5,7 @@ void setup_motor(motor m)
     pinMode(m.speed_pin, OUTPUT);
     pinMode(m.backward_dir_pin, OUTPUT);
     pinMode(m.forward_dir_pin, OUTPUT);
+    pinMode(m.encoder_pin, INPUT);
 
     stop_motor(m);
 }
