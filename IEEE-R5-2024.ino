@@ -354,13 +354,13 @@ bool get_dist(ultrasonic sensor, float &inches, uint8_t num_samples, unsigned lo
 void move(float inches)
 {
     // degrees will be used for PID to keep wheels spinning straight
-    float distance, start_yaw, yaw, threshold = 2;
+    float distance, threshold = 2;
 
-    while (!get_dist(distance))
+    while (!get_dist(front, distance))
         ;
+    float start_yaw, yaw;
     while (!get_yaw(start_yaw, 5))
         ;
-
     // validating given distance
     float distance_to_travel = distance - inches;
     if (distance_to_travel <= threshold)
@@ -373,34 +373,44 @@ void move(float inches)
 
     // PID values
     const float kP = 10;
-    const float kI = 0.005;
+    const float kI = 0.1;
     const float kD = 0;
 
     while (!get_yaw(yaw, 5))
         ;
-    float error       = start_yaw - yaw;
+    float error = start_yaw - yaw;
+
     float error_prev  = error;
     float error_total = 0;
 
-    const float base_speed = 90;
-    while (distance - inches > threshold)
+    const float base_speed = 75;
+
+    // while (distance - inches > threshold)
+    unsigned long start_time = millis();
+    while (millis() - start_time < 30e3)  // run for 20 seconds
+    // while (distance > 6)
     {
         // getting the average of 5 measurements
         while (!get_yaw(yaw, 5))
             ;
-        error             = start_yaw - yaw;
+        float error       = start_yaw - yaw;
         error_total      += error;
         float error_diff  = error - error_prev;
 
 #ifdef MOVE_DEBUG
         DBG_PRINT("Error=")
         DPRINT(error);
+        DPRINT("\n");
 #endif
 
         // this will need *a lot* of adjusting and testing!
         float pid_output = kP * error + kI * error_total + kD * error_diff;
-        spin_motor(left_motor, base_speed + pid_output);
-        spin_motor(right_motor, base_speed - pid_output);
+        spin_motor(left_motor, base_speed - pid_output);
+        spin_motor(right_motor, base_speed + pid_output);
+
+        // update the front distance sensor value
+        while (!get_dist(front, distance, 5))
+            ;
     }
     stop_motor(left_motor);
     stop_motor(right_motor);
