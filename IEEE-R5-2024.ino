@@ -308,7 +308,8 @@ bool get_yaw(float &degrees, uint8_t num_samples, unsigned long timeout_millis)
 
 // Sets the inches variable to the average of 5 calculated distances
 // Returns true if distance was read successfully, false otherwise
-bool get_dist(float &inches, uint8_t num_samples, unsigned long timeout_millis)
+
+bool get_dist(ultrasonic sensor, float &inches, uint8_t num_samples, unsigned long timeout_millis)
 {
     float inches_sum         = 0;
     uint8_t successful_reads = 0;
@@ -320,20 +321,29 @@ bool get_dist(float &inches, uint8_t num_samples, unsigned long timeout_millis)
 
         successful_reads++;
         // clear excess data
-        digitalWrite(trigPin, LOW);
+        digitalWrite(sensor.trig_pin, LOW);
         delayMicroseconds(5);
 
-        digitalWrite(trigPin, HIGH);
+        digitalWrite(sensor.trig_pin, HIGH);
         delayMicroseconds(10);
-        digitalWrite(trigPin, LOW);
+        digitalWrite(sensor.trig_pin, LOW);
 
-        unsigned long duration = pulseIn(echoPin, HIGH);  // microseconds
+        unsigned long duration = pulseIn(sensor.echo_pin, HIGH);  // microseconds
+
+        if (duration == 0)
+        {
+            return false;
+        }
 
         // divide by 2, because we're measuring distance from when it bounces to
         // when it hits the sensor, and then by 74 in/microseconds (speed of sound)
         inches_sum += duration / 2.0 / 74;
     }
-
+#ifdef GETDIST_DEBUG
+    DBG_PRINT("Ultrasonic Distance Sum: ");
+    DPRINT(inches_sum / num_samples);
+    DPRINT("\n");
+#endif
     inches = inches_sum / num_samples;
     return true;
 }
