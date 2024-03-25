@@ -348,6 +348,109 @@ bool get_dist(ultrasonic sensor, float &inches, uint8_t num_samples, unsigned lo
     return true;
 }
 
+// switches between multiple PID valeus based on certain conditions:
+// 1) Makes sure that robot is a certain distance from the wall
+// 2) Makes sure that the robot is actually going straight
+// 3) Makes sure that the robot's wheels are spinning the same distance
+void encoder_move(double inches)
+{
+    left_motor.encoder_count   = 0;
+    right_motor.encoder_count  = 0;
+    float num_holes            = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
+    float side_distance_target = 4;
+
+    float start_yaw, current_yaw, side_distance;
+    while (!get_yaw(start_yaw, 5))
+        ;
+    while (!get_yaw(current_yaw, 5))
+        ;
+    while (!get_dist(side, side_distance, 5))
+        ;
+    // holds [0]=error, [1]=total, [2]=previous
+    float errors[][3] = {
+        {right_motor.encoder_count - left_motor.encoder_count, 0, right_motor.encoder_count - left_motor.encoder_count},
+        {start_yaw - current_yaw,                              0, start_yaw - current_yaw                             },
+        {side_distance_target - side_distance,                 0, side_distance_target - side_distance                },
+    };
+
+    // by default, spin that @ 90%
+    float base_speed  = 90;
+    float left_speed  = base_speed;
+    float right_speed = base_speed;
+
+    // PID values
+    // corresponds to `errors`
+    float PIDs[][3] = {
+        {10, 0.005, 0  },
+        {5,  0.01,  0.1},
+        {5,  0.01,  0.1},
+    };
+
+    while (left_motor.encoder_count < num_holes && right_motor.encoder_count < num_holes)
+    {
+        spin_motor(left_motor, left_speed);
+        spin_motor(right_motor, right_speed);
+
+        // get new values
+        while (!get_dist(side, side_distance, 5))
+            ;
+        while (!get_yaw(current_yaw, 5))
+            ;
+#ifdef DEBUG
+        DBG_PRINT("Encoder Counts (left,right): ");
+        DPRINT(left_motor.encoder_count);
+        DPRINT(F(" "));
+        DPRINT(right_motor.encoder_count);
+        DPRINT(F("\t"));
+        DPRINT(F("Yaw (target, current): "));
+        DPRINT(start_yaw);
+        DPRINT(F(" "));
+        DPRINT(current_yaw);
+        DPRINT(F("\t"));
+        DPRINT(F("Side Dist (in): "));
+        DPRINT(side_distance);
+        DPRINT(F("\n"));
+#endif
+
+        // update all of the error values
+        errors[0][0]  = right_motor.encoder_count - left_motor.encoder_count;
+        errors[0][1] += errors[0][0];
+
+        errors[1][0]  = start_yaw - current_yaw;
+        errors[1][1] += errors[1][0];
+
+        errors[2][0]  = side_distance_target - side_distance;
+        errors[2][1] += errors[2][0];
+
+        // choose which PID approach to use based on conditions
+        float error_diff, PID_output;
+        if (abs(errors[2][0]) >= 2) {
+            error_diff = errors[2][0] - errors[2][2];
+            PID_output = PIDs[2][0] * errors[2][0] + PIDs[2][1] * errors[2][1] + PIDs[2][1] + error_diff * PIDs[2][2];
+        } else if (abs(errors[1][0]) >= 2) {
+            error_diff = errors[1][0] - errors[1][2];
+            PID_output = PIDs[1][0] * errors[1][0] + PIDs[1][1] * errors[1][1] + PIDs[1][1] + error_diff * PIDs[1][2];
+        } else {
+            error_diff = errors[0][0] - errors[0][2];
+            PID_output = PIDs[0][0] * errors[0][0] + PIDs[0][1] * errors[0][1] + PIDs[0][1] + error_diff * PIDs[0][2];
+        }
+
+        errors[0][2] = errors[0][0];
+        errors[1][2] = errors[1][0];
+        errors[2][2] = errors[2][0];
+
+        left_speed = base_speed + PID_output;
+        right_speed = base_speed - PID_output;
+    }
+
+    // Serial.print("left_encoder_count:");
+    // Serial.print(left->encoder_count);
+    // Serial.print(",right_encoder_count:");
+    // Serial.println(right->encoder_count);
+    stop_motor(left_motor);
+    stop_motor(right_motor);
+}
+
 // This function assumes that the ultrasonic sensor is mounted to look forward
 // and to a wall. It calculates distance by subtracting the ultrasonic sensor's
 // distance from the distance found by the wall.
