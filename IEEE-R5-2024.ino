@@ -126,20 +126,26 @@ void setup()
     delay(2000);
 #endif
 
+    // setup ultrasonic sensor
+    pinMode(front.trig_pin, OUTPUT);
+    pinMode(front.echo_pin, INPUT);
+    digitalWrite(front.trig_pin, LOW);
+
+    pinMode(side.trig_pin, OUTPUT);
+    pinMode(side.echo_pin, INPUT);
+    digitalWrite(side.trig_pin, LOW);
+
+#ifdef DEBUG
+    OK_PRINTLN("Ultrasonic sensor pinmodes set");
+#endif
+
     setup_motor(left_motor);
     setup_motor(right_motor);
+    attachInterrupt(digitalPinToInterrupt(left_motor.encoder_pin), update_left_encoder, RISING);
+    attachInterrupt(digitalPinToInterrupt(right_motor.encoder_pin), update_right_encoder, RISING);
 
 #ifdef DEBUG
     OK_PRINTLN("Motor pinmodes set");
-#endif
-
-    // setup ultrasonic sensor
-    pinMode(trigPin, OUTPUT);
-    pinMode(echoPin, INPUT);
-    digitalWrite(trigPin, LOW);
-
-#ifdef DEBUG
-    OK_PRINTLN("Ultrasonic sensor pins set");
 #endif
 
     // setup mpu
