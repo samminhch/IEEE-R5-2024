@@ -424,22 +424,30 @@ void encoder_move(double inches)
 
         // choose which PID approach to use based on conditions
         float error_diff, PID_output;
-        if (abs(errors[2][0]) >= 2) {
-            error_diff = errors[2][0] - errors[2][2];
-            PID_output = PIDs[2][0] * errors[2][0] + PIDs[2][1] * errors[2][1] + PIDs[2][1] + error_diff * PIDs[2][2];
-        } else if (abs(errors[1][0]) >= 2) {
-            error_diff = errors[1][0] - errors[1][2];
-            PID_output = PIDs[1][0] * errors[1][0] + PIDs[1][1] * errors[1][1] + PIDs[1][1] + error_diff * PIDs[1][2];
-        } else {
-            error_diff = errors[0][0] - errors[0][2];
-            PID_output = PIDs[0][0] * errors[0][0] + PIDs[0][1] * errors[0][1] + PIDs[0][1] + error_diff * PIDs[0][2];
+        byte error_select;  // 0 = encoder counts, 1 = mpu, 2 = distance from wall
+
+        if (abs(errors[2][0]) >= 2)
+        {
+            error_select = 2;
         }
+        else if (abs(errors[1][0]) >= 2)
+        {
+            error_select = 1;
+        }
+        else
+        {
+            error_select = 0;
+        }
+
+        error_diff = errors[error_select][0] - errors[error_select][2];
+        PID_output = PIDs[error_select][0] * errors[error_select][0] + PIDs[error_select][1] * errors[error_select][1] +
+                     PIDs[error_select][1] + error_diff * PIDs[error_select][2];
 
         errors[0][2] = errors[0][0];
         errors[1][2] = errors[1][0];
         errors[2][2] = errors[2][0];
 
-        left_speed = base_speed + PID_output;
+        left_speed  = base_speed + PID_output;
         right_speed = base_speed - PID_output;
     }
 
