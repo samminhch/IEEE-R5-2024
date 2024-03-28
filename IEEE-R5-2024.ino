@@ -484,7 +484,7 @@ void turn(float degrees)
         target_yaw += 360;
     }
 
-    float speed = 80;
+    float speed = 50;
 
     spin_motor(right_motor, turn_right ? -speed : speed);
     spin_motor(left_motor, turn_right ? speed : -speed);
