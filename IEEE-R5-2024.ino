@@ -382,9 +382,9 @@ void encoder_move(double inches)
     // corresponds to `errors`
     float PIDs[][3] = {
   //    P,   I    , D
-        {10, 0.005, 0  },
-        {5,  0.01,  0.1}, // TODO these values need adjusting
-        {5,  0.01,  0.1}, // TODO these values need adjusting
+        {10,  0.005, 0  },
+        {7.5, 0.75,  0.5}, // TODO these values need adjusting
+        {5,   0.01,  0.1}, // TODO these values need adjusting
     };
 
     while (left_motor.encoder_count < num_holes && right_motor.encoder_count < num_holes)
@@ -529,30 +529,50 @@ void move(float inches)
     stop_motor(right_motor);
 }
 
+// + degrees = turn right, - degrees = turn left
 void turn(float degrees)
 {
+    // determine turn direction
+    bool turn_right = degrees > 0;
     // calculate the target degrees needed
-    float yaw_threshold = 0.1;
+    float yaw_threshold = 2;
     float yaw, target_yaw;
     while (!get_yaw(yaw, 10))
         ;
-    target_yaw = yaw + degrees;
 
-    float speed = 100;
-    spin_motor(right_motor, degrees > 0 ? -speed : speed);
-    spin_motor(left_motor, degrees > 0 ? -speed : speed);
+    degrees *=
+        (329. / 400) + (0.0050092593 * degrees) - (7. / 270000 * pow(degrees, 2)) + (1. / 19881818 * pow(degrees, 3));
 
+    target_yaw = yaw - degrees;
+
+    // normalize degrees to be between -180, 180
+    while (target_yaw > 180)
+    {
+        target_yaw -= 360;
+    }
+    while (target_yaw < -180)
+    {
+        target_yaw += 360;
+    }
+
+    float speed = 80;
+
+    spin_motor(right_motor, turn_right ? -speed : speed);
+    spin_motor(left_motor, turn_right ? speed : -speed);
     while (abs(target_yaw - yaw) > yaw_threshold)
     {
-
-        while (!get_yaw(yaw, 10))
+        while (!get_yaw(yaw))
             ;
 #ifdef TURN_DEBUG
         DBG_PRINT("Yaw: ");
         DPRINT(yaw);
         DPRINT(F("\tTarget Yaw:"));
         DPRINT(target_yaw);
+        DPRINT(F("\tabs. diff:"));
+        DPRINT(abs(target_yaw - yaw));
         DPRINT(F("\n"));
 #endif
     }
+    stop_motor(left_motor);
+    stop_motor(right_motor);
 }
