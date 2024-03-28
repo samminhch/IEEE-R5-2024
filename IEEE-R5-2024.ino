@@ -397,8 +397,10 @@ void move(double inches)
             ;
         while (!get_yaw(current_yaw, 5))
             ;
-#ifdef DEBUG
-        DBG_PRINT("Encoder Counts (left, right): ");
+#ifdef MOVE_DEBUG
+        DBG_PRINT("Encoder Counts (target, left, right): ");
+        DPRINT(num_holes);
+        DPRINT(F(" "));
         DPRINT(left_motor.encoder_count);
         DPRINT(F(" "));
         DPRINT(right_motor.encoder_count);
@@ -452,11 +454,6 @@ void move(double inches)
         left_speed  = base_speed - PID_output;
         right_speed = base_speed + PID_output;
     }
-
-    // Serial.print("left_encoder_count:");
-    // Serial.print(left->encoder_count);
-    // Serial.print(",right_encoder_count:");
-    // Serial.println(right->encoder_count);
     stop_motor(left_motor);
     stop_motor(right_motor);
 }
