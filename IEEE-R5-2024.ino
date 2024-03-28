@@ -352,7 +352,7 @@ bool get_dist(ultrasonic sensor, float &inches, uint8_t num_samples, unsigned lo
 // 1) Makes sure that robot is a certain distance from the wall
 // 2) Makes sure that the robot is actually going straight
 // 3) Makes sure that the robot's wheels are spinning the same distance
-void encoder_move(double inches)
+void move(double inches)
 {
     left_motor.encoder_count   = 0;
     right_motor.encoder_count  = 0;
@@ -398,7 +398,7 @@ void encoder_move(double inches)
         while (!get_yaw(current_yaw, 5))
             ;
 #ifdef DEBUG
-        DBG_PRINT("Encoder Counts (left,right): ");
+        DBG_PRINT("Encoder Counts (left, right): ");
         DPRINT(left_motor.encoder_count);
         DPRINT(F(" "));
         DPRINT(right_motor.encoder_count);
@@ -457,74 +457,6 @@ void encoder_move(double inches)
     // Serial.print(left->encoder_count);
     // Serial.print(",right_encoder_count:");
     // Serial.println(right->encoder_count);
-    stop_motor(left_motor);
-    stop_motor(right_motor);
-}
-
-// This function assumes that the ultrasonic sensor is mounted to look forward
-// and to a wall. It calculates distance by subtracting the ultrasonic sensor's
-// distance from the distance found by the wall.
-void move(float inches)
-{
-    // degrees will be used for PID to keep wheels spinning straight
-    float distance, threshold = 2;
-
-    while (!get_dist(front, distance))
-        ;
-    float start_yaw, yaw;
-    while (!get_yaw(start_yaw, 5))
-        ;
-    // validating given distance
-    float distance_to_travel = distance - inches;
-    if (distance_to_travel <= threshold)
-    {
-#ifdef MOVE_DEBUG
-        ERR_PRINTLN("Given distance would result in robot bumping into wall... stopping command!");
-#endif
-        return;
-    }
-
-    // PID values
-    const float kP = 10;
-    const float kI = 0.1;
-    const float kD = 0;
-
-    while (!get_yaw(yaw, 5))
-        ;
-    float error = start_yaw - yaw;
-
-    float error_prev  = error;
-    float error_total = 0;
-
-    const float base_speed = 75;
-
-    // while (distance - inches > threshold)
-    unsigned long start_time = millis();
-    while (millis() - start_time < 30e3)  // run for 20 seconds
-    // while (distance > 6)
-    {
-        // getting the average of 5 measurements
-        while (!get_yaw(yaw, 5))
-            ;
-        float error       = start_yaw - yaw;
-        error_total      += error;
-        float error_diff  = error - error_prev;
-
-#ifdef MOVE_DEBUG
-        DBG_PRINT("Error=")
-        DPRINT(error);
-        DPRINT("\n");
-#endif
-
-        // this will need *a lot* of adjusting and testing!
-        float pid_output = kP * error + kI * error_total + kD * error_diff;
-        spin_motor(left_motor, base_speed - pid_output);
-        spin_motor(right_motor, base_speed + pid_output);
-
-        // update the front distance sensor value
-        while (!get_dist(front, distance, 5))
-            ;
-    }
     stop_motor(left_motor);
     stop_motor(right_motor);
 }
