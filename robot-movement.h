@@ -1,21 +1,19 @@
 /*
  * robot-movement.h - Library for dual-motor robotics movement. This assumes
- * that you are using a DC motor connected to a L293D, as well as an otpical
- * encoder with an encoder disk
+ * that you are using a DC motor connected to a L293D
  */
 #ifndef ROBOT_MOVEMENT_H_
     #define ROBOT_MOVEMENT_H_
 
     #include <Arduino.h>
-    #include <QuickPID.h>
     #include <stdlib.h>
 
 // TODO maybe add an encoder count / value to this struct?
 struct motor
 {
-        const int speed_pin;
-        const int backward_dir_pin;
-        const int forward_dir_pin;
+        const byte speed_pin;
+        const byte backward_dir_pin;
+        const byte forward_dir_pin;
         const int encoder_pin;
         volatile int encoder_count;
 };
@@ -31,12 +29,7 @@ const int MOTOR_MIN              = 0.85 * MOTOR_MAX;  // slowest speed of motors
 // input status for the left and right motors
 void setup_motor(motor);
 
-// TODO calibrate the PID values within this function
-void move(double inches, motor *left, motor *right);
-
-void turn(double degrees, motor *left, motor *right);
-
-// speed should be a value from MOTOR_MIN->MOTOR_MAX
+// speed should be a value from 0->100%
 void spin_motor(motor, float speed);
 
 // sets both direction pins of motor to LOW
