@@ -120,10 +120,8 @@ void setup()
     Fastwire::setup(400, true);
 #endif
 
-#ifdef DEBUG
     Serial.begin(115200);
     delay(2000);
-#endif
 
     // setup ultrasonic sensor
     pinMode(front.trig_pin, OUTPUT);
