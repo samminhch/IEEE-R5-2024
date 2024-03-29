@@ -1,4 +1,4 @@
-default_fqbn: arduino:avr:micro
-default_port: /dev/ttyACM0
+default_fqbn: arduino:avr:nano
+default_port: /dev/ttyUSB1
 libraries:
   - MPU6050 (1.3.0)
