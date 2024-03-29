@@ -11,8 +11,8 @@
     // #define GETDIST_DEBUG
     // comment out if you don't want to see debug prints on move()
     #define MOVE_DEBUG
-// comment out if you don't want to see debug prints on turn()
-// #define TURN_DEBUG  ;
+    // comment out if you don't want to see debug prints on turn()
+    #define TURN_DEBUG
     #define DPRINT(msg) Serial.print(msg);
     #define OK_PRINT(msg)           \
         Serial.print(F("[OKAY] ")); \
@@ -73,6 +73,7 @@ bool get_yaw(float &degrees, uint8_t num_samples = 1, unsigned long timeout_mill
 /**********
  * MOTORS *
  **********/
+// NOTE: left encoder is not hooked up to the robot
 motor left_motor{5, 4, 6, 0};
 motor right_motor{9, 8, 7, 2};
 
@@ -141,7 +142,7 @@ void setup()
 
     setup_motor(left_motor);
     setup_motor(right_motor);
-    attachInterrupt(digitalPinToInterrupt(left_motor.encoder_pin), update_left_encoder, RISING);
+    // attachInterrupt(digitalPinToInterrupt(left_motor.encoder_pin), update_left_encoder, RISING);
     attachInterrupt(digitalPinToInterrupt(right_motor.encoder_pin), update_right_encoder, RISING);
 
 #ifdef DEBUG
@@ -194,6 +195,9 @@ void setup()
         DBG_PRINTLN("Enabling MPU's DMP...");
 #endif
         mpu.setDMPEnabled(true);
+#ifdef DEBUG
+        OK_PRINTLN("MPU's DMP enabled!");
+#endif
     }
 #ifdef DEBUG
     else
