@@ -364,14 +364,11 @@ void move(double inches)
         ;
     while (!get_yaw(current_yaw, 5))
         ;
-    while (!get_dist(side, side_distance, 5))
-        ;
-    // holds [0]=error, [1]=total, [2]=previous
-    float errors[][3] = {
-        {right_motor.encoder_count - left_motor.encoder_count, 0, right_motor.encoder_count - left_motor.encoder_count},
-        {start_yaw - current_yaw,                              0, start_yaw - current_yaw                             },
-        {side_distance_target - side_distance,                 0, side_distance_target - side_distance                },
-    };
+
+    // error values
+    float error       = start_yaw - current_yaw;
+    float error_total = 0;
+    float error_prev  = error;
 
     // by default, spin that @ 90%
     float base_speed  = 90;
@@ -379,22 +376,15 @@ void move(double inches)
     float right_speed = base_speed;
 
     // PID values
-    // corresponds to `errors`
-    float PIDs[][3] = {
-  //    P,   I    , D
-        {10,  0.005, 0  },
-        {7.5, 0.75,  0.5}, // TODO these values need adjusting
-        {5,   0.01,  0.1}, // TODO these values need adjusting
-    };
+    float kP = 7.5;
+    float kI = 0.05;
+    float kD = 0.5;
 
     while (left_motor.encoder_count < num_holes && right_motor.encoder_count < num_holes)
     {
         spin_motor(left_motor, left_speed);
         spin_motor(right_motor, right_speed);
 
-        // get new values
-        while (!get_dist(side, side_distance, 5))
-            ;
         while (!get_yaw(current_yaw, 5))
             ;
 #ifdef MOVE_DEBUG
@@ -416,40 +406,12 @@ void move(double inches)
 #endif
 
         // update all of the error values
-        errors[0][0]  = right_motor.encoder_count - left_motor.encoder_count;
-        errors[0][1] += errors[0][0];
+        error             = start_yaw - current_yaw;
+        error_total      += error;
+        float error_diff  = error - error_prev;
+        error_prev        = error;
 
-        errors[1][0]  = start_yaw - current_yaw;
-        errors[1][1] += errors[1][0];
-
-        errors[2][0]  = side_distance_target - side_distance;
-        errors[2][1] += errors[2][0];
-
-        // choose which PID approach to use based on conditions
-        float error_diff, PID_output;
-        byte error_select;  // 0 = encoder counts, 1 = mpu, 2 = distance from wall
-
-        // comment out this section if you only want to stick to one method
-        if (abs(errors[2][0]) >= 2)
-        {
-            error_select = 2;
-        }
-        else if (abs(errors[1][0]) >= 2)
-        {
-            error_select = 1;
-        }
-        else
-        {
-            error_select = 0;
-        }
-
-        error_diff = errors[error_select][0] - errors[error_select][2];
-        PID_output = PIDs[error_select][0] * errors[error_select][0] + PIDs[error_select][1] * errors[error_select][1] +
-                     PIDs[error_select][1] + error_diff * PIDs[error_select][2];
-
-        errors[0][2] = errors[0][0];
-        errors[1][2] = errors[1][0];
-        errors[2][2] = errors[2][0];
+        float PID_output = kP * error + kI * error_total + kD * error_diff;
 
         left_speed  = base_speed - PID_output;
         right_speed = base_speed + PID_output;
@@ -463,6 +425,7 @@ void turn(float degrees)
 {
     // determine turn direction
     bool turn_right = degrees > 0;
+
     // calculate the target degrees needed
     float yaw_threshold = 2;
     float yaw, target_yaw;
