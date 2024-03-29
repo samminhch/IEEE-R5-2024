@@ -74,7 +74,7 @@ bool get_yaw(float &degrees, uint8_t num_samples = 1, unsigned long timeout_mill
  * MOTORS *
  **********/
 motor left_motor{5, 4, 6, 0};
-motor right_motor{9, 8, 7, 1};
+motor right_motor{9, 8, 7, 2};
 
 void update_left_encoder() { left_motor.encoder_count += digitalRead(left_motor.forward_dir_pin) ? 1 : -1; }
 
