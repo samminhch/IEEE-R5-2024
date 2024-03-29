@@ -10,7 +10,7 @@
     // comment out if you don't want to see debug prints on get_dist()
     // #define GETDIST_DEBUG
     // comment out if you don't want to see debug prints on move()
-    #define MOVE_DEBUG
+    // #define MOVE_DEBUG
     // comment out if you don't want to see debug prints on turn()
     #define TURN_DEBUG
     #define DPRINT(msg) Serial.print(msg);
@@ -40,10 +40,6 @@
         Serial.println(F((msg)));
 #endif
 
-#define ROUND     1
-#define STR_LEN   64
-#define NUM_PATHS 8
-
 /**************
  * ULTRASONIC *
  **************/
@@ -54,7 +50,6 @@ struct ultrasonic
 };
 
 // can't store pins in PROGMEM, we're reading waaaay too quick for it to be useful
-const ultrasonic side{14, 15};
 const ultrasonic front{10, 16};
 // Sets the inches variable to the average of 5 calculated distances
 // Returns true if distance was read successfully, false otherwise
@@ -91,17 +86,20 @@ struct path
         const float angle_after;
 };
 
-int seeding_index                  = 0;
-const PROGMEM path paths_seeding[] = {
-    {6,  90, -90},
+#define SEEDING
+int seeding_index          = 0;
+const path paths_seeding[] = {
+    {4,  90, -90},
     {72, 0,  -90},
     {6,  0,  90 },
     {6,  0,  -90},
     {12, 0,  0  }
 };
 
-int elimination_index                  = 0;
-const PROGMEM path paths_elimination[] = {
+// #define ELIMS
+#define ELIMS_PATH_LENGTH 8
+int elimination_index          = 0;
+const path paths_elimination[] = {
     {101.76, 45,  -135}, // A ➡️ D
     {107.28, -27, -153}, // D ➡️ H
     {75.84,  -71, -161}, // H ➡️ F
@@ -122,8 +120,8 @@ void setup()
     Fastwire::setup(400, true);
 #endif
 
-#ifdef DEBUG
     Serial.begin(115200);
+#ifdef DEBUG
     delay(2000);
 #endif
 
@@ -131,11 +129,6 @@ void setup()
     pinMode(front.trig_pin, OUTPUT);
     pinMode(front.echo_pin, INPUT);
     digitalWrite(front.trig_pin, LOW);
-
-    pinMode(side.trig_pin, OUTPUT);
-    pinMode(side.echo_pin, INPUT);
-    digitalWrite(side.trig_pin, LOW);
-
 #ifdef DEBUG
     OK_PRINTLN("Ultrasonic sensor pinmodes set");
 #endif
@@ -169,12 +162,12 @@ void setup()
     uint8_t dev_status = mpu.dmpInitialize();
 
     // offsets from calibration -- run the calibration program yourself to get offsets
-    mpu.setXAccelOffset(-3484);
-    mpu.setYAccelOffset(279);
-    mpu.setZAccelOffset(1458);
-    mpu.setXGyroOffset(57);
-    mpu.setYGyroOffset(-8);
-    mpu.setZGyroOffset(5);
+    mpu.setXAccelOffset(-3642);
+    mpu.setYAccelOffset(301);
+    mpu.setZAccelOffset(5406);
+    mpu.setXGyroOffset(42);
+    mpu.setYGyroOffset(3);
+    mpu.setZGyroOffset(-1);
 
     if (dev_status == 0)
     {
@@ -207,9 +200,6 @@ void setup()
         DPRINT(")\n");
     }
 #endif
-
-    pinMode(LED_BUILTIN, OUTPUT);
-
     /******************
      * MOVEMENT TESTS *
      ******************/
@@ -223,8 +213,9 @@ void setup()
     // Serial.println(dist / time_elapsed);
 
     // turn test
-    // for (int i = 0; i < 4; i++) {
-    //     turn(90);
+    // for (int i = 0; i < 4; i++)
+    // {
+    //     turn(-90);
     //     delay(2500);
     // }
 
@@ -242,41 +233,43 @@ void setup()
 void loop()
 {
 #ifdef DEBUG
-    DPRINT("left_motor_encoder_count: ");
-    DPRINT(left_motor.encoder_count);
-    DPRINT("\t");
-    DPRINT("right_motor_encoder_count: ");
-    DPRINT(right_motor.encoder_count);
-    DPRINT("\n");
-#endif
-
-    // going through the paths
-    // turn(paths_elimination[elimination_index].angle_before);
-    // move(paths_elimination[elimination_index].distance);
-    // turn(paths_elimination[elimination_index].angle_after);
-    // elimination_index = (elimination_index + 1) % NUM_PATHS;
-
-    // printing out values in debug mode!
-#ifdef DEBUG
-    float distance, yaw, side_distance;
-    get_dist(front, distance);
-    DBG_PRINT("Front Distance (inches):")
-    DPRINT(distance);
-    DPRINT("\t");
-
-    get_dist(side, side_distance);
-    DPRINT("Side Distance (inches):")
-    DPRINT(side_distance);
-    DPRINT("\t");
+    float distance, yaw;
+    DBG_PRINT("");
+    // if (get_dist(front, distance))
+    // {
+    //     DPRINT("Front Distance (inches): ")
+    //     DPRINT(distance);
+    //     DPRINT("\t");
+    // }
 
     if (mpu_connection_status && get_yaw(yaw))
     {
         // it does drift a little, but it's no big deal I think, it drifts
         // less than an angle after a while
-        DPRINT("Yaw (degrees):");
+        DPRINT("Yaw (degrees): ");
         DPRINT(yaw);
     }
-    DPRINT("\n");
+    DPRINT(F("\tRight Motor Encoder Count: "));
+    DPRINT(right_motor.encoder_count);
+    DPRINT(F("\n"));
+#endif
+
+#ifdef SEEDING
+    turn(paths_seeding[seeding_index].angle_before);
+    delay(500);
+    move(paths_seeding[seeding_index].distance);
+    delay(500);
+    turn(paths_seeding[seeding_index].angle_after);
+    seeding_index++;
+    delay(500);
+#elif ELIMS
+    turn(paths_elimination[elimination_index].angle_before);
+    delay(500);
+    move(paths_elimination[elimination_index].distance);
+    delay(500);
+    turn(paths_elimination[elimination_index].angle_after);
+    elimination_index = (elimination_index + 1) % ELIMS_PATH_LENGTH;
+    delay(500);
 #endif
 }
 
@@ -358,12 +351,11 @@ bool get_dist(ultrasonic sensor, float &inches, uint8_t num_samples, unsigned lo
 // 3) Makes sure that the robot's wheels are spinning the same distance
 void move(double inches)
 {
-    left_motor.encoder_count   = 0;
-    right_motor.encoder_count  = 0;
-    float num_holes            = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
-    float side_distance_target = 4;
+    left_motor.encoder_count  = 0;
+    right_motor.encoder_count = 0;
+    float num_holes           = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
 
-    float start_yaw, current_yaw, side_distance;
+    float start_yaw, current_yaw;
     while (!get_yaw(start_yaw, 5))
         ;
     while (!get_yaw(current_yaw, 5))
@@ -384,7 +376,7 @@ void move(double inches)
     float kI = 0.05;
     float kD = 0.5;
 
-    while (left_motor.encoder_count < num_holes && right_motor.encoder_count < num_holes)
+    while (num_holes - abs(right_motor.encoder_count) > 0)
     {
         spin_motor(left_motor, left_speed);
         spin_motor(right_motor, right_speed);
@@ -403,9 +395,6 @@ void move(double inches)
         DPRINT(start_yaw);
         DPRINT(F(" "));
         DPRINT(current_yaw);
-        DPRINT(F("\t"));
-        DPRINT(F("Side Dist (in): "));
-        DPRINT(side_distance);
         DPRINT(F("\n"));
 #endif
 
@@ -436,8 +425,14 @@ void turn(float degrees)
     while (!get_yaw(yaw, 10))
         ;
 
-    degrees *=
-        (449. / 400) - (0.0055462963 * degrees) + (16. / 219661 * pow(degrees, 2)) - (1. / 4463265 * pow(degrees, 3));
+    float multiplier = (61. / 80) + (0.0071203704 * abs(degrees)) - (9. / 197027 * pow(abs(degrees), 2)) +
+                       (1. / 9508695 * pow(abs(degrees), 3));
+    #ifdef TURN_DEBUG
+        DBG_PRINT("Turn multiplier: ");
+        DPRINT(multiplier);
+        DPRINT("\n");
+    #endif
+    degrees *= multiplier;
 
     target_yaw = yaw - degrees;
 
