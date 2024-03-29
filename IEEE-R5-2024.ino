@@ -10,7 +10,7 @@
     // comment out if you don't want to see debug prints on get_dist()
     // #define GETDIST_DEBUG
     // comment out if you don't want to see debug prints on move()
-    #define MOVE_DEBUG
+    // #define MOVE_DEBUG
     // comment out if you don't want to see debug prints on turn()
     #define TURN_DEBUG
     #define DPRINT(msg) Serial.print(msg);
@@ -39,10 +39,6 @@
         Serial.print(F("[WARN] ")); \
         Serial.println(F((msg)));
 #endif
-
-#define ROUND     1
-#define STR_LEN   64
-#define NUM_PATHS 8
 
 /**************
  * ULTRASONIC *
@@ -90,17 +86,20 @@ struct path
         const float angle_after;
 };
 
-int seeding_index                  = 0;
-const PROGMEM path paths_seeding[] = {
-    {6,  90, -90},
+#define SEEDING
+int seeding_index          = 0;
+const path paths_seeding[] = {
+    {4,  90, -90},
     {72, 0,  -90},
     {6,  0,  90 },
     {6,  0,  -90},
     {12, 0,  0  }
 };
 
-int elimination_index                  = 0;
-const PROGMEM path paths_elimination[] = {
+// #define ELIMS
+#define ELIMS_PATH_LENGTH 8
+int elimination_index          = 0;
+const path paths_elimination[] = {
     {101.76, 45,  -135}, // A ➡️ D
     {107.28, -27, -153}, // D ➡️ H
     {75.84,  -71, -161}, // H ➡️ F
@@ -130,11 +129,6 @@ void setup()
     pinMode(front.trig_pin, OUTPUT);
     pinMode(front.echo_pin, INPUT);
     digitalWrite(front.trig_pin, LOW);
-
-    pinMode(side.trig_pin, OUTPUT);
-    pinMode(side.echo_pin, INPUT);
-    digitalWrite(side.trig_pin, LOW);
-
 #ifdef DEBUG
     OK_PRINTLN("Ultrasonic sensor pinmodes set");
 #endif
@@ -168,12 +162,12 @@ void setup()
     uint8_t dev_status = mpu.dmpInitialize();
 
     // offsets from calibration -- run the calibration program yourself to get offsets
-    mpu.setXAccelOffset(-3484);
-    mpu.setYAccelOffset(279);
-    mpu.setZAccelOffset(1458);
-    mpu.setXGyroOffset(57);
-    mpu.setYGyroOffset(-8);
-    mpu.setZGyroOffset(5);
+    mpu.setXAccelOffset(-3642);
+    mpu.setYAccelOffset(301);
+    mpu.setZAccelOffset(5406);
+    mpu.setXGyroOffset(42);
+    mpu.setYGyroOffset(3);
+    mpu.setZGyroOffset(-1);
 
     if (dev_status == 0)
     {
@@ -219,8 +213,9 @@ void setup()
     // Serial.println(dist / time_elapsed);
 
     // turn test
-    // for (int i = 0; i < 4; i++) {
-    //     turn(90);
+    // for (int i = 0; i < 4; i++)
+    // {
+    //     turn(-90);
     //     delay(2500);
     // }
 
@@ -238,37 +233,43 @@ void setup()
 void loop()
 {
 #ifdef DEBUG
-    DPRINT("left_motor_encoder_count: ");
-    DPRINT(left_motor.encoder_count);
-    DPRINT("\t");
-    DPRINT("right_motor_encoder_count: ");
-    DPRINT(right_motor.encoder_count);
-    DPRINT("\n");
-#endif
-
-    // going through the paths
-    // turn(paths_elimination[elimination_index].angle_before);
-    // move(paths_elimination[elimination_index].distance);
-    // turn(paths_elimination[elimination_index].angle_after);
-    // elimination_index = (elimination_index + 1) % NUM_PATHS;
-
-    // printing out values in debug mode!
-#ifdef DEBUG
-    float distance, yaw, side_distance;
-    get_dist(front, distance);
-    DBG_PRINT("Front Distance (inches):")
-    DPRINT(distance);
-    DPRINT("\t");
-
+    float distance, yaw;
+    DBG_PRINT("");
+    // if (get_dist(front, distance))
+    // {
+    //     DPRINT("Front Distance (inches): ")
+    //     DPRINT(distance);
+    //     DPRINT("\t");
+    // }
 
     if (mpu_connection_status && get_yaw(yaw))
     {
         // it does drift a little, but it's no big deal I think, it drifts
         // less than an angle after a while
-        DPRINT("Yaw (degrees):");
+        DPRINT("Yaw (degrees): ");
         DPRINT(yaw);
     }
-    DPRINT("\n");
+    DPRINT(F("\tRight Motor Encoder Count: "));
+    DPRINT(right_motor.encoder_count);
+    DPRINT(F("\n"));
+#endif
+
+#ifdef SEEDING
+    turn(paths_seeding[seeding_index].angle_before);
+    delay(500);
+    move(paths_seeding[seeding_index].distance);
+    delay(500);
+    turn(paths_seeding[seeding_index].angle_after);
+    seeding_index++;
+    delay(500);
+#elif ELIMS
+    turn(paths_elimination[elimination_index].angle_before);
+    delay(500);
+    move(paths_elimination[elimination_index].distance);
+    delay(500);
+    turn(paths_elimination[elimination_index].angle_after);
+    elimination_index = (elimination_index + 1) % ELIMS_PATH_LENGTH;
+    delay(500);
 #endif
 }
 
