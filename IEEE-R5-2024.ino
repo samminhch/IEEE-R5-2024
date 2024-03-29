@@ -121,7 +121,9 @@ void setup()
 #endif
 
     Serial.begin(115200);
+#ifdef DEBUG
     delay(2000);
+#endif
 
     // setup ultrasonic sensor
     pinMode(front.trig_pin, OUTPUT);
