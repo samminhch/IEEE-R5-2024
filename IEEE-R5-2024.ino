@@ -54,7 +54,6 @@ struct ultrasonic
 };
 
 // can't store pins in PROGMEM, we're reading waaaay too quick for it to be useful
-const ultrasonic side{14, 15};
 const ultrasonic front{10, 16};
 // Sets the inches variable to the average of 5 calculated distances
 // Returns true if distance was read successfully, false otherwise
@@ -207,9 +206,6 @@ void setup()
         DPRINT(")\n");
     }
 #endif
-
-    pinMode(LED_BUILTIN, OUTPUT);
-
     /******************
      * MOVEMENT TESTS *
      ******************/
@@ -264,10 +260,6 @@ void loop()
     DPRINT(distance);
     DPRINT("\t");
 
-    get_dist(side, side_distance);
-    DPRINT("Side Distance (inches):")
-    DPRINT(side_distance);
-    DPRINT("\t");
 
     if (mpu_connection_status && get_yaw(yaw))
     {
@@ -358,12 +350,11 @@ bool get_dist(ultrasonic sensor, float &inches, uint8_t num_samples, unsigned lo
 // 3) Makes sure that the robot's wheels are spinning the same distance
 void move(double inches)
 {
-    left_motor.encoder_count   = 0;
-    right_motor.encoder_count  = 0;
-    float num_holes            = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
-    float side_distance_target = 4;
+    left_motor.encoder_count  = 0;
+    right_motor.encoder_count = 0;
+    float num_holes           = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
 
-    float start_yaw, current_yaw, side_distance;
+    float start_yaw, current_yaw;
     while (!get_yaw(start_yaw, 5))
         ;
     while (!get_yaw(current_yaw, 5))
@@ -384,7 +375,7 @@ void move(double inches)
     float kI = 0.05;
     float kD = 0.5;
 
-    while (left_motor.encoder_count < num_holes && right_motor.encoder_count < num_holes)
+    while (num_holes - abs(right_motor.encoder_count) > 0)
     {
         spin_motor(left_motor, left_speed);
         spin_motor(right_motor, right_speed);
@@ -403,9 +394,6 @@ void move(double inches)
         DPRINT(start_yaw);
         DPRINT(F(" "));
         DPRINT(current_yaw);
-        DPRINT(F("\t"));
-        DPRINT(F("Side Dist (in): "));
-        DPRINT(side_distance);
         DPRINT(F("\n"));
 #endif
 
