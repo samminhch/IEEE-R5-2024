@@ -424,8 +424,14 @@ void turn(float degrees)
     while (!get_yaw(yaw, 10))
         ;
 
-    degrees *=
-        (449. / 400) - (0.0055462963 * degrees) + (16. / 219661 * pow(degrees, 2)) - (1. / 4463265 * pow(degrees, 3));
+    float multiplier = (61. / 80) + (0.0071203704 * abs(degrees)) - (9. / 197027 * pow(abs(degrees), 2)) +
+                       (1. / 9508695 * pow(abs(degrees), 3));
+    #ifdef TURN_DEBUG
+        DBG_PRINT("Turn multiplier: ");
+        DPRINT(multiplier);
+        DPRINT("\n");
+    #endif
+    degrees *= multiplier;
 
     target_yaw = yaw - degrees;
 
