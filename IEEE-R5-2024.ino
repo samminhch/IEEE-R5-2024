@@ -433,7 +433,7 @@ void turn(float degrees)
         ;
 
     degrees *=
-        (329. / 400) + (0.0050092593 * degrees) - (7. / 270000 * pow(degrees, 2)) + (1. / 19881818 * pow(degrees, 3));
+        (449. / 400) - (0.0055462963 * degrees) + (16. / 219661 * pow(degrees, 2)) - (1. / 4463265 * pow(degrees, 3));
 
     target_yaw = yaw - degrees;
 
