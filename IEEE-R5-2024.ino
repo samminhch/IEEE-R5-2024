@@ -1,9 +1,10 @@
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps612.h"
 #include "robot-movement.h"
+#include "Servo.h"
 
 // comment this out when not connected to computer (i.e. actually competing)
-// #define DEBUG
+#define DEBUG
 #ifdef DEBUG
     // comment out if you don't want to see debug prints on get_yaw()
     // #define GETYAW_DEBUG
@@ -40,6 +41,8 @@
         Serial.println(F((msg)));
 #endif
 
+Servo myservo;
+
 /**************
  * ULTRASONIC *
  **************/
@@ -69,8 +72,8 @@ bool get_yaw(float &degrees, uint8_t num_samples = 1, unsigned long timeout_mill
  * MOTORS *
  **********/
 // NOTE: left encoder is not hooked up to the robot
-motor left_motor{5, 4, 6, 0};
-motor right_motor{9, 8, 7, 2};
+motor left_motor{5, 6, 4, 0};
+motor right_motor{9, 7, 8, 2};
 
 void update_left_encoder() { left_motor.encoder_count += digitalRead(left_motor.forward_dir_pin) ? 1 : -1; }
 
@@ -200,6 +203,11 @@ void setup()
         DPRINT(")\n");
     }
 #endif
+
+    // SETUP SERVO
+    //myservo.attach(11);
+    
+    
     /******************
      * MOVEMENT TESTS *
      ******************/
@@ -211,16 +219,34 @@ void setup()
     // float time_elapsed = (micros() - start_time) / 1000000.0;
     // Serial.print("robot travelled at a speed (in/s): ");
     // Serial.println(dist / time_elapsed);
-
+    delay(2000);
+    // Serial.println("In setup");
     // turn test
-    // for (int i = 0; i < 4; i++)
-    // {
-    //     turn(-90);
-    //     delay(2500);
-    // }
-
+/*
+    for (int i = 0; i < 4; i++)
+    {
+        turn(-90);
+        delay(2500);
+    }
+*/
     // straight line and back test
-    // move(12);
+    turn(45);
+    delay(500);
+    move(7);
+    delay(500);
+    turn(-45);
+    delay(500);
+    move(55);
+    delay(500);
+    turn(-95);
+    delay(500);
+    move(5);
+    delay(500);
+    turn(90);
+    delay(500);
+    move(6);
+    delay(500);
+    
     // move(12);
 
     // square test
@@ -228,6 +254,7 @@ void setup()
     // move(12);
     // turn(90);
     // }
+    delay(2500);
 }
 
 void loop()
@@ -408,6 +435,7 @@ void move(double inches)
 
         left_speed  = base_speed - PID_output;
         right_speed = base_speed + PID_output;
+        // right_speed *= 1.02;
     }
     stop_motor(left_motor);
     stop_motor(right_motor);
@@ -418,15 +446,17 @@ void turn(float degrees)
 {
     // determine turn direction
     bool turn_right = degrees > 0;
+    Serial.println("in turn function:"); /////////////////////////////////////////////////
 
     // calculate the target degrees needed
     float yaw_threshold = 2;
     float yaw, target_yaw;
     while (!get_yaw(yaw, 10))
         ;
-
-    float multiplier = (61. / 80) + (0.0071203704 * abs(degrees)) - (9. / 197027 * pow(abs(degrees), 2)) +
+    
+    float multiplier = (61. / 80) + (0.0071203704 * abs(degrees)) - (9. / 197027 * pow(abs(degrees), 2)) + ////////////////////mmmmmmmm
                        (1. / 9508695 * pow(abs(degrees), 3));
+    //float multiplier = 1.02;  // 90 = 0.775, 45 = 0.6
     #ifdef TURN_DEBUG
         DBG_PRINT("Turn multiplier: ");
         DPRINT(multiplier);
@@ -440,10 +470,12 @@ void turn(float degrees)
     while (target_yaw > 180)
     {
         target_yaw -= 360;
+        Serial.println("adjusted - 360"); /////////////////////////////////////////////////
     }
     while (target_yaw < -180)
     {
         target_yaw += 360;
+        Serial.println("adjusted + 360"); /////////////////////////////////////////////////
     }
 
     float speed = 50;
@@ -453,6 +485,7 @@ void turn(float degrees)
     while (abs(target_yaw - yaw) > yaw_threshold)
     {
         while (!get_yaw(yaw))
+        Serial.println("in yaw loop"); /////////////////////////////////////////////////
             ;
 #ifdef TURN_DEBUG
         DBG_PRINT("Yaw: ");
