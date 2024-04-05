@@ -1,0 +1,588 @@
+#include "I2Cdev.h"
+#include "MPU6050_6Axis_MotionApps612.h"
+#include "robot-movement.h"
+#include "Servo.h"
+
+Servo arm_servo;
+
+// comment this out when not connected to computer (i.e. actually competing)
+#define DEBUG
+#ifdef DEBUG
+    // comment out if you don't want to see debug prints on get_yaw()
+    // #define GETYAW_DEBUG
+    // comment out if you don't want to see debug prints on get_dist()
+    // #define GETDIST_DEBUG
+    // comment out if you don't want to see debug prints on move()
+    // #define MOVE_DEBUG
+    // comment out if you don't want to see debug prints on turn()
+    #define TURN_DEBUG
+    #define DPRINT(msg) Serial.print(msg);
+    #define OK_PRINT(msg)           \
+        Serial.print(F("[OKAY] ")); \
+        Serial.print(F(msg));
+    #define OK_PRINTLN(msg)         \
+        Serial.print(F("[OKAY] ")); \
+        Serial.println(F((msg)));
+    #define ERR_PRINT(msg)           \
+        Serial.print(F("[ERROR] ")); \
+        Serial.print(F((msg)));
+    #define ERR_PRINTLN(msg)         \
+        Serial.print(F("[ERROR] ")); \
+        Serial.println(F((msg)));
+    #define DBG_PRINT(msg)           \
+        Serial.print(F("[DEBUG] ")); \
+        Serial.print(F((msg)));
+    #define DBG_PRINTLN(msg)         \
+        Serial.print(F("[DEBUG] ")); \
+        Serial.println(F((msg)));
+    #define WARN_PRINT(msg)         \
+        Serial.print(F("[WARN] ")); \
+        Serial.print(F((msg)));
+    #define WARN_PRINTLN(msg)       \
+        Serial.print(F("[WARN] ")); \
+        Serial.println(F((msg)));
+#endif
+
+
+/**************
+ * ULTRASONIC *
+ **************/
+struct ultrasonic
+{
+        const byte trig_pin;
+        const byte echo_pin;
+};
+
+const ultrasonic side{3, 12};
+// Returns true if distance was read successfully, false otherwise
+bool get_dist(ultrasonic sensor, float &inches, uint8_t num_samples = 1, unsigned long timeout_millis = 100);
+
+/***********
+ * MPU6050 *
+ ***********/
+#define SIDE_ATTACHED
+MPU6050 mpu;
+bool mpu_connection_status;
+bool mpu_calibrate = false;
+// Sets the degrees variable to the calculated yaw.
+// Returns true if angle was read successfully, false if timeout was reached
+bool get_yaw(float &degrees, uint8_t num_samples = 1, unsigned long timeout_millis = 100);
+
+/**********
+ * MOTORS *
+ **********/
+// NOTE: left encoder is not hooked up to the robot
+motor left_motor{5, 6, 4};
+motor right_motor{11, 7, 8, 2};
+
+void update_left_encoder() { left_motor.encoder_count += digitalRead(left_motor.forward_dir_pin) ? 1 : -1; }
+
+void update_right_encoder() { right_motor.encoder_count += digitalRead(right_motor.forward_dir_pin) ? 1 : -1; }
+
+void set_servo(int , int );
+
+/**********
+ * PATHS *
+ **********/
+struct path
+{
+        const float distance;
+        const float angle_before;
+        const float angle_after;
+};
+
+// #define SEEDING
+int seeding_index          = 0;
+const path paths_seeding[] = {
+    {4,  90, -90},
+    {72, 0,  -90},
+    {6,  0,  90 },
+    {6,  0,  -90},
+    {12, 0,  0  }
+};
+
+// #define ELIMS
+#define ELIMS_PATH_LENGTH 8
+int elimination_index          = 0;
+const path paths_elimination[] = {
+    {101.76, 45,  -135}, // A ➡️ D
+    {107.28, -27, -153}, // D ➡️ H
+    {75.84,  -71, -161}, // H ➡️ F
+    {107.28, -63, -153}, // F ➡️ B
+    {101.76, -45, 135 }, // B ➡️ G
+    {75.84,  -18, -108}, // G ➡️ E
+    {75.84,  -18, -108}, // E ➡️ C
+    {75.84,  -18, -108}, // C ➡️ A
+};
+
+void setup()
+{
+
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+    Wire.begin();
+    Wire.setClock(400e3);
+#elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+    Fastwire::setup(400, true);
+#endif
+
+    Serial.begin(115200);
+#ifdef DEBUG
+    delay(2000);
+#endif
+
+    // setup ultrasonic sensor
+#ifdef SIDE_ATTACHED
+    pinMode(side.trig_pin, OUTPUT);
+    pinMode(side.echo_pin, INPUT);
+    digitalWrite(side.trig_pin, LOW);
+#endif
+
+#ifdef DEBUG
+    OK_PRINTLN("Ultrasonic sensor pinmodes set");
+#endif
+
+    setup_motor(left_motor);
+    setup_motor(right_motor);
+    // attachInterrupt(digitalPinToInterrupt(left_motor.encoder_pin), update_left_encoder, RISING);
+    attachInterrupt(digitalPinToInterrupt(right_motor.encoder_pin), update_right_encoder, RISING);
+
+#ifdef DEBUG
+    OK_PRINTLN("Motor pinmodes set");
+#endif
+
+    // setup mpu
+    mpu.initialize();
+
+    mpu_connection_status = mpu.testConnection();
+#ifdef DEBUG
+    DBG_PRINTLN("Testing MPU6050 connection...");
+
+    if (mpu_connection_status)
+    {
+        OK_PRINTLN("MPU6050 connection successful");
+    }
+    else
+    {
+        ERR_PRINTLN("MPU6050 connection failed");
+    }
+#endif
+
+    uint8_t dev_status = mpu.dmpInitialize();
+
+    // offsets from calibration -- run the calibration program yourself to get offsets
+    mpu.setXAccelOffset(-3642);
+    mpu.setYAccelOffset(301);
+    mpu.setZAccelOffset(5406);
+    mpu.setXGyroOffset(42);
+    mpu.setYGyroOffset(3);
+    mpu.setZGyroOffset(-1);
+
+    if (dev_status == 0)
+    {
+        if (mpu_calibrate)
+        {
+#ifdef DEBUG
+            DBG_PRINTLN("Calibrating MPU's gyroscope and accelerometer...");
+#endif
+            mpu.CalibrateAccel(6);
+            mpu.CalibrateGyro(6);
+#ifdef DEBUG
+            DPRINT("\n");
+            DBG_PRINT("Offsets: ");
+            mpu.PrintActiveOffsets();
+#endif
+        }
+#ifdef DEBUG
+        DBG_PRINTLN("Enabling MPU's DMP...");
+#endif
+        mpu.setDMPEnabled(true);
+#ifdef DEBUG
+        OK_PRINTLN("MPU's DMP enabled!");
+#endif
+    }
+#ifdef DEBUG
+    else
+    {
+        ERR_PRINT("DMP Initialization failed (code ");
+        DPRINT(dev_status);
+        DPRINT(")\n");
+    }
+#endif
+
+    // SETUP SERVO
+    arm_servo.attach(10);
+    arm_servo.write(10);
+    
+    /******************
+     * MOVEMENT TESTS *
+     ******************/
+
+    // straight line test
+    // unsigned long start_time = micros();
+    // int dist                 = 100;
+    // move(dist);
+    // float time_elapsed = (micros() - start_time) / 1000000.0;
+    // Serial.print("robot travelled at a speed (in/s): ");
+    // Serial.println(dist / time_elapsed);
+    // Serial.println("In setup");
+    // turn test
+/*
+    for (int i = 0; i < 4; i++)
+    {
+        turn(-90);
+        delay(2500);
+    }
+*/
+
+    
+    
+    // straight line and back test
+    turn(45);
+    delay(500);
+    move(6, false);
+    delay(500);
+    turn(-45);
+    delay(500);
+    move(55, true);
+    delay(500);
+    turn(-90);
+    delay(500);
+    move(5, false);
+    delay(500);
+    turn(90);
+    delay(500);
+    move(6, false);
+    delay(500);
+    
+    turn(180);
+    delay(1000);
+    
+    turn(45);
+    delay(500);
+    move(6, false);
+    delay(500);
+    turn(-47);
+    delay(500);
+    move(55, true);
+    delay(500);
+    turn(-90);
+    delay(500);
+    move(4, false);
+    delay(500);
+    turn(85);
+    delay(500);
+    move(6, false);
+    delay(500);
+    
+    // move(12);
+
+    // square test
+    // for (int i = 0; i < 4; i++) {
+    // move(12);
+    // turn(90);
+    // }
+    delay(2500);
+}
+
+void loop()
+{
+#ifdef DEBUG
+    float distance, yaw;
+    DBG_PRINT("");
+     if (get_dist(side, distance))
+     {
+         DPRINT("Front Distance (inches): ")
+         DPRINT(distance);
+         DPRINT("\t");
+     }
+
+    if (mpu_connection_status && get_yaw(yaw))
+    {
+        // it does drift a little, but it's no big deal I think, it drifts
+        // less than an angle after a while
+        DPRINT("Yaw (degrees): ");
+        DPRINT(yaw);
+    }
+    DPRINT(F("\tRight Motor Encoder Count: "));
+    DPRINT(right_motor.encoder_count);
+    DPRINT(F("\n"));
+#endif
+
+#ifdef SEEDING
+    turn(paths_seeding[seeding_index].angle_before);
+    delay(500);
+    move(paths_seeding[seeding_index].distance);
+    delay(500);
+    turn(paths_seeding[seeding_index].angle_after);
+    seeding_index++;
+    delay(500);
+#elif ELIMS
+    turn(paths_elimination[elimination_index].angle_before);
+    delay(500);
+    move(paths_elimination[elimination_index].distance);
+    delay(500);
+    turn(paths_elimination[elimination_index].angle_after);
+    elimination_index = (elimination_index + 1) % ELIMS_PATH_LENGTH;
+    delay(500);
+#endif
+}
+
+bool get_yaw(float &degrees, uint8_t num_samples, unsigned long timeout_millis)
+{
+    float yaw_sum            = 0;
+    uint8_t successful_reads = 0;
+    unsigned long start_time = millis();
+
+    while (successful_reads < num_samples)
+    {
+        uint8_t fifo_buffer[64];
+        if (mpu.dmpGetCurrentFIFOPacket(fifo_buffer) == 1)
+        {
+            successful_reads++;
+
+            Quaternion q;
+            mpu.dmpGetQuaternion(&q, fifo_buffer);
+            yaw_sum += degrees(-atan2(2 * (q.w * q.z + -q.x * q.y), q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z));
+        }
+        else if ((millis() - start_time) >= timeout_millis)
+        {
+#ifdef GETYAW_DEBUG
+            ERR_PRINTLN("Couldn't get yaw readings!");
+#endif
+            return false;
+        }
+    }
+
+    degrees = yaw_sum / num_samples;
+    return true;
+}
+
+// Sets the inches variable to the average of 5 calculated distances
+// Returns true if distance was read successfully, false otherwise
+
+bool get_dist(ultrasonic sensor, float &inches, uint8_t num_samples, unsigned long timeout_millis)
+{
+    float inches_sum         = 0;
+    uint8_t successful_reads = 0;
+    // unsigned long start_time = millis();
+
+    while (successful_reads < num_samples)
+    {
+        // TODO find and handle errors when reading from ultrasonic sensor
+
+        successful_reads++;
+        // clear excess data
+        digitalWrite(sensor.trig_pin, LOW);
+        delayMicroseconds(5);
+
+        digitalWrite(sensor.trig_pin, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(sensor.trig_pin, LOW);
+
+        unsigned long duration = pulseIn(sensor.echo_pin, HIGH);  // microseconds
+
+        if (duration == 0)
+        {
+            return false;
+        }
+
+        // divide by 2, because we're measuring distance from when it bounces to
+        // when it hits the sensor, and then by 74 in/microseconds (speed of sound)
+        inches_sum += duration / 2.0 / 74;
+    }
+#ifdef GETDIST_DEBUG
+    DBG_PRINT("Ultrasonic Distance Sum: ");
+    DPRINT(inches_sum / num_samples);
+    DPRINT("\n");
+#endif
+    inches = inches_sum / num_samples;
+    return true;
+}
+
+// switches between multiple PID valeus based on certain conditions:
+// 1) Makes sure that robot is a certain distance from the wall
+// 2) Makes sure that the robot is actually going straight
+// 3) Makes sure that the robot's wheels are spinning the same distance
+void move(double inches, bool side_sensor_enabled) // false by default
+{
+    // direction check:
+    bool forward              = inches > 0;
+    left_motor.encoder_count  = 0;
+    right_motor.encoder_count = 0;
+    float num_holes           = inches / (2 * PI * WHEEL_RADIUS / ENCODER_DISK_COUNT);
+    
+#ifdef SIDE_ATTACHED
+    float side_dist_threshold = 4; // in inches
+    float current_side_dist;
+    while (side_sensor_enabled && !get_dist(side, current_side_dist));
+
+#endif
+
+    float start_yaw, current_yaw;
+    while (!get_yaw(start_yaw, 5))
+        ;
+    while (!get_yaw(current_yaw, 5))
+        ;
+
+    // error values
+    float error       = start_yaw - current_yaw;
+    float error_total = 0;
+    float error_prev  = error;
+
+#ifdef SIDE_ATTACHED
+    float error_side       = side_dist_threshold - current_side_dist;
+    float error_total_side = 0;
+    float error_prev_side  = error_side;
+    
+#endif
+
+    // by default, spin that @ 90%
+    float base_speed  = 90;
+    float left_speed  = base_speed;
+    float right_speed = base_speed;
+
+    // PID values
+    float kP = 7.5;
+    float kI = 0.05;
+    float kD = 0.5;
+
+#ifdef SIDE_ATTACHED
+    float kP_side = 10;
+    float kI_side = 0.05;
+    float kD_side = 0.5;
+#endif
+
+    while (abs(num_holes) - abs(right_motor.encoder_count) > 0)
+    {
+        spin_motor(left_motor, left_speed);
+        spin_motor(right_motor, right_speed);
+
+        while (!get_yaw(current_yaw, 5))
+            ;
+#ifdef SIDE_ATTACHED
+        while (side_sensor_enabled && !get_dist(side, current_side_dist));
+#endif
+#ifdef MOVE_DEBUG
+        DBG_PRINT("Encoder Counts (target, left, right): ");
+        DPRINT(num_holes);
+        DPRINT(F(" "));
+        DPRINT(left_motor.encoder_count);
+        DPRINT(F(" "));
+        DPRINT(right_motor.encoder_count);
+        DPRINT(F("\t"));
+        DPRINT(F("Yaw (target, current): "));
+        DPRINT(start_yaw);
+        DPRINT(F(" "));
+        DPRINT(current_yaw);
+        DPRINT(F("\n"));
+#endif
+
+        // update all of the error values
+        error             = start_yaw - current_yaw;
+        error_total      += error;
+        float error_diff  = error - error_prev;
+        error_prev        = error;
+
+        float PID_output = kP * error + kI * error_total + kD * error_diff;
+
+#ifdef SIDE_ATTACHED
+        error_side            = side_dist_threshold - current_side_dist;
+        error_total_side     += error_side;
+        float error_diff_side = error_side - error_prev_side;
+        error_prev_side       = error_side;
+
+        if (abs(error_side) < 0.75) {
+          PID_output = kP_side * error_side + kI_side * error_total_side + kD_side * error_diff_side;
+        }
+#endif
+
+        left_speed  = base_speed - PID_output;
+        right_speed = base_speed + PID_output;
+
+        if (!forward) {
+          left_speed  = -left_speed;
+          right_speed = -right_speed;
+        }
+        // right_speed *= 1.02;
+    }
+    stop_motor(left_motor);
+    stop_motor(right_motor);
+}
+
+// + degrees = turn right, - degrees = turn left
+void turn(float degrees)
+{
+    // determine turn direction
+    bool turn_right = degrees > 0;
+    Serial.println("in turn function:"); /////////////////////////////////////////////////
+
+    // calculate the target degrees needed
+    float yaw_threshold = 2;
+    float yaw, target_yaw;
+    while (!get_yaw(yaw, 10))
+        ;
+    
+    float multiplier = (61. / 90) + (0.0071203704 * abs(degrees)) - (9. / 197027 * pow(abs(degrees), 2)) + ////////////////////mmmmmmmm
+                       (1. / 9508695 * pow(abs(degrees), 3));
+    //float multiplier = 1.02;  // 
+    #ifdef TURN_DEBUG
+        DBG_PRINT("Turn multiplier: ");
+        DPRINT(multiplier);
+        DPRINT("\n");
+    #endif
+    degrees *= multiplier;
+
+    target_yaw = yaw - degrees;
+
+    // normalize degrees to be between -180, 180
+    while (target_yaw > 180)
+    {
+        target_yaw -= 360;
+        Serial.println("adjusted - 360"); /////////////////////////////////////////////////
+    }
+    while (target_yaw < -180)
+    {
+        target_yaw += 360;
+        Serial.println("adjusted + 360"); /////////////////////////////////////////////////
+    }
+
+    float speed = 50;
+
+    spin_motor(right_motor, turn_right ? -speed : speed);
+    spin_motor(left_motor, turn_right ? speed : -speed);
+    while (abs(target_yaw - yaw) > yaw_threshold)
+    {
+        while (!get_yaw(yaw))
+        Serial.println("in yaw loop"); /////////////////////////////////////////////////
+            ;
+#ifdef TURN_DEBUG
+        DBG_PRINT("Yaw: ");
+        DPRINT(yaw);
+        DPRINT(F("\tTarget Yaw:"));
+        DPRINT(target_yaw);
+        DPRINT(F("\tabs. diff:"));
+        DPRINT(abs(target_yaw - yaw));
+        DPRINT(F("\n"));
+#endif
+    }
+    stop_motor(left_motor);
+    stop_motor(right_motor);
+}
+
+
+void set_servo(int current, int target) {
+  arm_servo.write(current);
+  delay(1500);
+  while ((target - current) != 0) {
+    if (target > current) {
+      current += 5;
+      arm_servo.write(current);
+      delay(500);
+    }
+    else if (target < current) {
+      current -= 5;
+      arm_servo.write(current);
+      delay(500);
+    }
+  }
+}
