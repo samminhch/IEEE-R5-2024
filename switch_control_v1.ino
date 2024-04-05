@@ -29,7 +29,7 @@ void setup() {
 void loop() {
     // Read the state of the DIP switch
     string dipSwitchState = readDipSwitchState();
-    i
+    
     // Check if the DIP switch state has changed
     
     // Execute the paths
@@ -40,22 +40,17 @@ void loop() {
 }
 
 // Read the state of the DIP switch
-string readDipSwitchState() {
-    
-    
-    int tempdipSwitchState1 = analogRead(dipSwitchPin_1);
-    int tempdipSwitchState2 = analogRead(dipSwitchPin_2);
-    int tempdipSwitchState3 = analogRead(dipSwitchPin_3);
-    string dipSwitchState1 = to_string(tempdipSwitchState1);
-    string dipSwitchState2 = to_string(tempdipSwitchState2);
-    string dipSwitchState3 = to_string(tempdipSwitchState3);;
-    string dipSwitchState = dipSwitchState1 + dipSwitchState2 + dipSwitchState3;
-    return dipSwitchState;
+int readDipSwitchState() {
+    int station = 4*(digitalRead(dipswitchPin_1)) + 2*(digitalRead(dipswitchPin_2)) + 1*(digitalRead(dipswitchPin_3)) 
+    return station;
 }
 
 // Set paths based on the DIP switch state
-void setPaths(string dipSwitchState) {
+void setPaths(int dipSwitchState) {
     switch(dipSwitchState){
-        case "000" : path 
+        case 0 : path;
+        case 1 : ;
+        case 2 : ;
+        
     }
 }
