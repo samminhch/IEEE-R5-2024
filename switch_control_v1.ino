@@ -1,16 +1,12 @@
+
 #include <Arduino.h>
 #include "robot-movement.h"
-#include <string>
+
 
 // Define DIP switch pins
-#define dipSwitchPin_1 A0;
-#define dipSwitchPin_2 A1;
-#define dipSwitchPin_3 A2;
-
-
-// Define paths based on the switch state
-const path* paths = nullptr;
-int numPaths = 0;
+#define dipSwitchPin_1 A0
+#define dipSwitchPin_2 A1
+#define dipSwitchPin_3 A2
 
 void setup() {
     // Set up the DIP switch pins as inputs with pull-ups 
@@ -28,7 +24,7 @@ void setup() {
 
 void loop() {
     // Read the state of the DIP switch
-    string dipSwitchState = readDipSwitchState();
+    int dipSwitchState = readDipSwitchState();
     
     // Check if the DIP switch state has changed
     
@@ -41,14 +37,14 @@ void loop() {
 
 // Read the state of the DIP switch
 int readDipSwitchState() {
-    int station = 4*(digitalRead(dipswitchPin_1)) + 2*(digitalRead(dipswitchPin_2)) + 1*(digitalRead(dipswitchPin_3)) 
+    int station = 4*(digitalRead(dipSwitchPin_1)) + 2*(digitalRead(dipSwitchPin_2)) + 1*(digitalRead(dipSwitchPin_3));
     return station;
 }
 
 // Set paths based on the DIP switch state
 void setPaths(int dipSwitchState) {
     switch(dipSwitchState){
-        case 0 : path;
+        case 0 : ;
         case 1 : ;
         case 2 : ;
         
