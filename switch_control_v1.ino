@@ -1,19 +1,23 @@
 #include <Arduino.h>
 #include "robot-movement.h"
+#include <string>
 
 // Define DIP switch pins
-int dipSwitchPins[8] = {A0, A3, A4, A5, 10, 11, 12, 13};
+#define dipSwitchPin_1 A0;
+#define dipSwitchPin_2 A1;
+#define dipSwitchPin_3 A2;
+
 
 // Define paths based on the switch state
 const path* paths = nullptr;
 int numPaths = 0;
 
 void setup() {
-    // Set up the DIP switch pins as inputs with pull-ups
-    for (int i = 0; i < 8; i++) {
-        pinMode(dipSwitchPins[i], INPUT_PULLUP);
-    }
-
+    // Set up the DIP switch pins as inputs with pull-ups 
+    pinMode(dipSwitchPin_1,INPUT_PULLUP);
+    pinMode(dipSwitchPin_2,INPUT_PULLUP);
+    pinMode(dipSwitchPin_3,INPUT_PULLUP);
+    
     // Initialize serial communication
     Serial.begin(9600);
 
@@ -24,40 +28,34 @@ void setup() {
 
 void loop() {
     // Read the state of the DIP switch
-    int dipSwitchState = readDipSwitchState();
-
+    string dipSwitchState = readDipSwitchState();
+    i
     // Check if the DIP switch state has changed
-    if (dipSwitchState != readDipSwitchState()) {
-        setPaths(dipSwitchState);
-    }
-
+    
     // Execute the paths
-    for (int i = 0; i < numPaths; i++) {
-        turn(paths[i].angle_before, left_motor, right_motor);
-        move(paths[i].distance, left_motor, right_motor);
-        turn(paths[i].angle_after, left_motor, right_motor);
-    }
+   
 
     // Add a delay to prevent reading the DIP switch too frequently
     delay(1000);
 }
 
 // Read the state of the DIP switch
-int readDipSwitchState() {
-    int dipSwitchState = 0;
-    for (int i = 0; i < 8; i++) {
-        dipSwitchState |= digitalRead(dipSwitchPins[i]) << i;
-    }
+string readDipSwitchState() {
+    
+    
+    int tempdipSwitchState1 = analogRead(dipSwitchPin_1);
+    int tempdipSwitchState2 = analogRead(dipSwitchPin_2);
+    int tempdipSwitchState3 = analogRead(dipSwitchPin_3);
+    string dipSwitchState1 = to_string(tempdipSwitchState1);
+    string dipSwitchState2 = to_string(tempdipSwitchState2);
+    string dipSwitchState3 = to_string(tempdipSwitchState3);;
+    string dipSwitchState = dipSwitchState1 + dipSwitchState2 + dipSwitchState3;
     return dipSwitchState;
 }
 
 // Set paths based on the DIP switch state
-void setPaths(int dipSwitchState) {
-    if (dipSwitchState == 1) {
-        paths = paths_seeding;
-        numPaths = sizeof(paths_seeding) / sizeof(paths_seeding[0]);
-    } else {
-        paths = paths_elimination;
-        numPaths = sizeof(paths_elimination) / sizeof(paths_elimination[0]);
+void setPaths(string dipSwitchState) {
+    switch(dipSwitchState){
+        case "000" : path 
     }
 }
